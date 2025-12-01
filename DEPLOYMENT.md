@@ -194,23 +194,117 @@ Strapi richiede un hosting che supporti:
    ];
    ```
 
-#### ✅ Opzione 2: Render
+#### ✅ Opzione 2: Render (Scelta Attuale)
 
 **Vantaggi:**
-- Free tier disponibile
+- Free tier disponibile (con limitazioni)
 - PostgreSQL incluso
-- Deployment automatico
+- Deployment automatico da Git
+- File `render.yaml` già configurato
 
-**Procedura:**
-1. Vai su [render.com](https://render.com)
-2. Crea un **PostgreSQL Database**
-3. Crea un **Web Service** per Strapi:
-   - Connetti il repository GitHub
-   - **Root Directory**: `apps/cms`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-   - Aggiungi tutte le variabili d'ambiente (come sopra)
-4. Collega il database al servizio
+**📖 Procedura Completa:**
+
+1. **Crea account su Render**
+   - Vai su [render.com](https://render.com)
+   - Login con GitHub
+
+2. **Connetti il repository**
+   - Nel dashboard, click su **New +** → **Blueprint**
+   - Seleziona il repository `capibara`
+   - Render rileverà automaticamente il file `render.yaml` nella root
+
+3. **Render creerà automaticamente:**
+   - Un database PostgreSQL (`capibara-database`)
+   - Un servizio web per Strapi (`capibara-cms`)
+   - Le variabili d'ambiente necessarie (alcune generate automaticamente)
+
+4. **Configura le variabili d'ambiente mancanti**
+   
+   Nel servizio `capibara-cms`, vai su **Environment** e verifica che ci siano:
+   
+   ```env
+   # Queste sono generate automaticamente da render.yaml:
+   DATABASE_URL=<auto-generato>
+   APP_KEYS=<auto-generato>
+   API_TOKEN_SALT=<auto-generato>
+   ADMIN_JWT_SECRET=<auto-generato>
+   TRANSFER_TOKEN_SALT=<auto-generato>
+   JWT_SECRET=<auto-generato>
+   ENCRYPTION_KEY=<auto-generato>
+   
+   # Queste sono già configurate:
+   NODE_ENV=production
+   HOST=0.0.0.0
+   PORT=1337
+   DATABASE_CLIENT=postgres
+   DATABASE_SSL=true
+   ```
+   
+   **Nota**: Se alcune variabili non sono state generate, puoi generarle manualmente:
+   ```bash
+   openssl rand -base64 32
+   ```
+   Esegui questo comando e usa il risultato per ogni secret.
+
+5. **Per APP_KEYS** (richiede 4 valori separati da virgola):
+   - Genera 4 chiavi diverse con `openssl rand -base64 32`
+   - Uniscile con virgole: `chiave1,chiave2,chiave3,chiave4`
+
+6. **Deploy automatico**
+   - Render eseguirà automaticamente il build
+   - Il processo può richiedere 5-10 minuti la prima volta
+   - Una volta completato, otterrai un URL tipo: `https://capibara-cms.onrender.com`
+
+7. **Configura CORS in Strapi** (importante!)
+   
+   Nel file `apps/cms/config/middlewares.ts`, assicurati che CORS sia configurato:
+   ```typescript
+   export default [
+     'strapi::logger',
+     'strapi::errors',
+     {
+       name: 'strapi::security',
+       config: {
+         contentSecurityPolicy: {
+           useDefaults: true,
+           directives: {
+             'connect-src': ["'self'", 'https:'],
+             'img-src': ["'self'", 'data:', 'blob:', 'https:'],
+             'media-src': ["'self'", 'data:', 'blob:', 'https:'],
+             upgradeInsecureRequests: null,
+           },
+         },
+       },
+     },
+     {
+       name: 'strapi::cors',
+       config: {
+         enabled: true,
+         origin: [
+           'https://tuo-frontend.vercel.app',
+           'http://localhost:3000',
+           'http://localhost:1337',
+         ],
+       },
+     },
+     'strapi::poweredBy',
+     'strapi::query',
+     'strapi::body',
+     'strapi::session',
+     'strapi::favicon',
+     'strapi::public',
+   ];
+   ```
+
+8. **Dopo il primo deploy:**
+   - Accedi a `https://tuo-cms.onrender.com/admin`
+   - Crea l'utente admin
+   - Configura i permessi pubblici (vedi checklist sotto)
+
+**⚠️ Nota sul Free Tier:**
+- Il servizio web può andare in "sleep" dopo 15 minuti di inattività
+- Il primo avvio dopo il sleep può richiedere 30-60 secondi
+- Per evitare il sleep, considera l'upgrade al piano Starter ($7/mese)
 
 #### Opzione 3: DigitalOcean App Platform
 
