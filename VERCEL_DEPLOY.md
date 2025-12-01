@@ -42,13 +42,14 @@ Vercel dovrebbe rilevare automaticamente che è un progetto Next.js. Verifica qu
   **Nota**: Il Root Directory va configurato nel dashboard Vercel, NON nel file `vercel.json`
 
 #### Build Settings
-**IMPORTANTE**: Se hai impostato il Root Directory su `apps/web`, Vercel eseguirà i comandi già dentro quella directory. Quindi:
+**IMPORTANTE**: Vercel rileva automaticamente Next.js e configura tutto automaticamente. NON serve il file `vercel.json`.
 
-- **Build Command**: `npm run build` (NON `cd apps/web && npm run build`)
-- **Output Directory**: `.next` (NON `apps/web/.next`)
-- **Install Command**: `npm install` (NON `cd apps/web && npm install`)
+Se devi configurare manualmente (non dovrebbe essere necessario):
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
 
-Vercel dovrebbe rilevare automaticamente queste impostazioni per Next.js. Se devi configurarle manualmente, usa i valori sopra (senza `cd apps/web`).
+**Nota**: Se vedi errori con `cd apps/web`, significa che il Root Directory non è impostato correttamente nel dashboard. Vai su Settings > General e imposta Root Directory su `apps/web`.
 
 ### 4. Configura le Variabili d'Ambiente
 
