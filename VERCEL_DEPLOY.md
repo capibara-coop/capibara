@@ -35,9 +35,11 @@ Vercel dovrebbe rilevare automaticamente che è un progetto Next.js. Verifica qu
 
 #### Root Directory
 - **Root Directory**: `apps/web`
-  - Click su **Edit** accanto a Root Directory
+  - Click su **Edit** accanto a Root Directory (se non è già impostato)
   - Seleziona `apps/web` dalla lista o digita `apps/web`
-  - Click su **Continue**
+  - Click su **Continue`
+  
+  **Nota**: Il Root Directory va configurato nel dashboard Vercel, NON nel file `vercel.json`
 
 #### Build Settings
 Vercel dovrebbe precompilare automaticamente:
