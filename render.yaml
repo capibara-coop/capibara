@@ -1,6 +1,6 @@
 services:
   # Database PostgreSQL per Strapi
-  - type: pspg
+  - type: pg
     name: capibara-database
     plan: starter
     databaseName: strapi
