@@ -61,7 +61,11 @@ export default async function FeedPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {allContent.map((item) => {
-              const showData = item.show?.data;
+              // Only video, podcast, and newsletter have 'show' property
+              const showData = 
+                item.contentType !== "article" && "show" in item
+                  ? (item as { show?: { data?: { attributes?: { kind?: Show["kind"] } } } }).show?.data
+                  : undefined;
               const showKind =
                 (showData?.attributes?.kind as Show["kind"]) ??
                 item.contentType;
