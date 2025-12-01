@@ -64,11 +64,10 @@ export default async function VideoEpisodePage({
             </div>
           )}
 
-          {episode.body && (
-            <div
-              className="prose prose-invert max-w-none text-zinc-300"
-              dangerouslySetInnerHTML={{ __html: episode.body }}
-            />
+          {episode.summary && (
+            <div className="prose prose-invert max-w-none text-zinc-300">
+              <p>{episode.summary}</p>
+            </div>
           )}
         </article>
       </div>
