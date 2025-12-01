@@ -1,5 +1,7 @@
 ## Breaking Media CMS
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Monorepo di partenza per una media company moderna composta da:
 
 - `apps/web`: frontend pubblico in Next.js 14 (App Router, Tailwind, alias `@/*`)
@@ -23,10 +25,11 @@ L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area
 
 ### Avvio rapido
 
-1. **Clona le dipendenze**
+1. **Clona il repository**
 
    ```bash
-   cd /Users/giuseppeaceto/Documents/GitHub/CMS
+   git clone <repository-url>
+   cd CMS
    ```
 
 2. **Avvia Postgres**
@@ -80,3 +83,6 @@ L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area
 
 Questo setup fornisce la base infrastrutturale per sviluppare velocemente sia l'area pubblica sia quella riservata agli abbonati.
 
+### Licenza
+
+Questo progetto è rilasciato sotto licenza [MIT](LICENSE). Vedi il file `LICENSE` per i dettagli.
