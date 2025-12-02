@@ -26,3 +26,62 @@ body {
     "Segoe UI", sans-serif;
   min-height: 100vh;
 }
+
+[data-theme="dark"] .section-heading {
+  color: #f9fafb; /* near-white */
+}
+
+[data-theme="light"] .section-heading {
+  color: #0f172a; /* slate-900 */
+}
+
+/* Hero gradient per tema */
+[data-theme="dark"] .hero {
+  background-image: linear-gradient(135deg, #020202 0%, #111111 45%, #18181b 100%);
+  border-color: rgba(249, 250, 251, 0.06);
+  box-shadow: 0 20px 120px rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+}
+
+[data-theme="light"] .hero {
+  background-image: linear-gradient(135deg, #ffffff 0%, #f5f5f5 45%, #e5e7eb 100%);
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 20px 90px rgba(15, 23, 42, 0.18);
+  color: #020617;
+}
+
+/* Eyebrow label sopra i titoli */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+[data-theme="dark"] .eyebrow {
+  color: #a1a1aa; /* zinc-400 */
+}
+
+[data-theme="light"] .eyebrow {
+  color: #4b5563; /* gray-600 */
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.75rem;
+  height: 1px;
+  border-radius: 999px;
+}
+
+[data-theme="dark"] .eyebrow::before {
+  background: linear-gradient(to right, #fbbf24, #f97316);
+  opacity: 0.8;
+}
+
+[data-theme="light"] .eyebrow::before {
+  background: linear-gradient(to right, #111827, #4b5563);
+  opacity: 0.6;
+}

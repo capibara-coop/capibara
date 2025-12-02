@@ -25,24 +25,26 @@ export default async function Home() {
 
   return (
     <MainLayout>
-      <header className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/80 via-zinc-900/20 to-indigo-900/20 p-8 shadow-[0_20px_120px_rgba(63,63,70,0.45)] lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-zinc-400">
-                Capibara Media
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                Video, podcast, articoli e newsletter da una sola content room.
-              </h2>
-              <p className="mt-4 max-w-xl text-zinc-300">
-                CMS headless con area riservata, workflow redazionale e distribuzione
-                omnicanale. Questa demo Next.js mostra il layout pubblico che
-                consumerà le API Strapi.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 text-sm text-zinc-300">
+      <header className="hero flex flex-col rounded-3xl border p-8 lg:flex-row">
+        <div className="flex flex-1 flex-col gap-8 lg:flex-row lg:items-end">
+          <div className="flex-1">
+            <p className="eyebrow">
+              Capibara • informazione
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
+              Storie, analisi e inchieste per chi guarda il mondo dal basso.
+            </h2>
+            <p className="mt-4 max-w-xl">
+              Capibara è una media company indipendente: video, podcast, articoli e newsletter
+              per raccontare lavoro, diritti, conflitti sociali e nuove forme di organizzazione.
+              Niente terzismi: scegliamo un punto di vista, quello di chi non ha potere.
+            </p>
+          </div>
+          <div className="mt-6 flex w-full justify-start lg:mt-0 lg:w-auto lg:justify-end">
+            <div className="flex flex-col gap-3 text-sm text-zinc-300 sm:flex-row sm:items-center">
               <Link
                 href="/abbonamenti"
-                className="rounded-full bg-white/90 px-6 py-3 font-semibold text-black text-center transition hover:bg-white"
+                className="rounded-full bg-white/90 px-6 py-3 text-center font-semibold text-black transition hover:bg-white"
               >
                 Abbonati ora
               </Link>
@@ -50,15 +52,15 @@ export default async function Home() {
                 Accedi
               </button>
             </div>
-          </header>
+          </div>
+        </div>
+      </header>
 
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
-                  Capibara Originals
-                </p>
-                <h3 className="text-2xl font-semibold text-white">
+                <p className="eyebrow">Capibara Originals</p>
+                <h3 className="section-heading text-2xl font-semibold">
                   Storied Network
                 </h3>
               </div>
@@ -99,10 +101,8 @@ export default async function Home() {
             <div className="space-y-6 rounded-3xl border border-white/10 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
-                    Podcast
-                  </p>
-                  <h3 className="text-2xl font-semibold text-white">
+                  <p className="eyebrow">Podcast</p>
+                  <h3 className="section-heading text-2xl font-semibold">
                     VentiQuaranta
                   </h3>
                 </div>
@@ -130,13 +130,14 @@ export default async function Home() {
             </div>
             <div className="space-y-6 rounded-3xl border border-white/10 p-6">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
-                  Newsletter
-                </p>
-                <h3 className="text-2xl font-semibold text-white">Area riservata</h3>
+                <p className="eyebrow">Newsletter</p>
+                <h3 className="section-heading text-2xl font-semibold">
+                  Area riservata
+                </h3>
                 <p className="mt-2 text-sm text-zinc-400">
-                  Gli approfondimenti vengono sbloccati automaticamente dopo la
-                  conferma del pagamento Stripe.
+                  Inchieste lunghe, approfondimenti teorici e strumenti pratici per chi vuole
+                  organizzarsi nei luoghi di lavoro, nelle città, nei movimenti. Sostieni
+                  un progetto editoriale che non dipende da partiti né da grandi gruppi.
                 </p>
               </div>
               <div className="space-y-4">
@@ -166,11 +167,9 @@ export default async function Home() {
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">
-                    Editoriale
-                  </p>
-                  <h3 className="text-2xl font-semibold text-white">
-                    Articoli e Approfondimenti
+                  <p className="eyebrow">Editoriale</p>
+                  <h3 className="section-heading text-2xl font-semibold">
+                    Articoli e approfondimenti di parte
                   </h3>
                 </div>
                 <Link
