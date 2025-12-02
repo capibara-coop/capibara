@@ -46,7 +46,7 @@ const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
   { label: "Feed", icon: List, href: "/feed" },
   { label: "Articoli", icon: Timer, href: "/articoli" },
-  { label: "Podcast", icon: Headphones, href: "/podcast", notify: true },
+  { label: "Podcast", icon: Headphones, href: "/podcast" },
   { label: "Video", icon: PlayCircle, href: "/video" },
   {
     label: "Newsletter",
