@@ -181,15 +181,26 @@ export default function MainLayout({
               priority
             />
             <div className="flex flex-col">
-              <span
-                className={`text-base font-semibold tracking-wide ${
-                  isDark ? "text-white" : "text-zinc-900"
-                }`}
-              >
-                Capibara
-              </span>
-              <span className="text-[11px] font-medium uppercase tracking-[0.28em] text-zinc-500">
-                Informazione
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-base font-semibold tracking-wide ${
+                    isDark ? "text-white" : "text-zinc-900"
+                  }`}
+                >
+                  Capibara
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border ${
+                    isDark
+                      ? "border-amber-400 text-amber-300 bg-amber-400/10"
+                      : "border-amber-500 text-amber-600 bg-amber-100"
+                  }`}
+                >
+                  Alpha
+                </span>
+              </div>
+              <span className="text-[11px] text-zinc-500">
+                Storie da chi non ha potere
               </span>
             </div>
           </div>
@@ -287,7 +298,7 @@ export default function MainLayout({
             </div>
           </div>
           <div className="flex justify-center">
-            <div className="w-full max-w-6xl">
+            <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8">
               <form
                 action="/archivio"
                 method="get"

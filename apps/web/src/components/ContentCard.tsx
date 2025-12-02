@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Show } from "@/lib/api";
+import { getStrapiMediaUrl } from "@/lib/api";
 
 type ContentTile = {
   title: string;
@@ -10,6 +12,8 @@ type ContentTile = {
   locked?: boolean;
   slug?: string;
   type?: "video" | "podcast" | "newsletter" | "article";
+  imageUrl?: string | null;
+  imageAlt?: string | null;
 };
 
 const kindAccent: Record<Show["kind"], string> = {
@@ -38,9 +42,39 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
   
   const href = getHref();
   
+  // entry.imageUrl is already a full URL from getStrapiMediaUrl, so use it directly
+  // Only call getStrapiMediaUrl if it's a relative path
+  const cardImageUrl = entry.imageUrl 
+    ? (entry.imageUrl.startsWith('http://') || entry.imageUrl.startsWith('https://'))
+      ? entry.imageUrl
+      : getStrapiMediaUrl(entry.imageUrl)
+    : null;
+
+  // Debug log in development
+  if (process.env.NODE_ENV === 'development' && entry.type === 'video') {
+    console.log('ContentCard imageUrl:', {
+      title: entry.title,
+      imageUrl: entry.imageUrl,
+      cardImageUrl,
+      hasImage: !!cardImageUrl,
+    });
+  }
+
   const CardContent = (
     <article className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-white/25 cursor-pointer">
-      <div className={`h-40 rounded-2xl bg-gradient-to-r ${entry.accent}`} />
+      <div className={`relative h-40 rounded-2xl overflow-hidden bg-gradient-to-r ${entry.accent}`}>
+        {cardImageUrl && (
+          <Image
+            src={cardImageUrl}
+            alt={entry.imageAlt || entry.title}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 320px, (min-width: 768px) 50vw, 100vw"
+          />
+        )}
+        {/* overlay leggera per mantenere leggibilità e mood del brand */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm uppercase tracking-wide text-zinc-400">
           <span>{entry.tag}</span>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getNewsletterIssueBySlug } from "@/lib/api";
+import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 
@@ -56,7 +57,7 @@ export default async function NewsletterIssuePage({
           {issue.body && (
             <div
               className="prose prose-invert max-w-none text-zinc-300"
-              dangerouslySetInnerHTML={{ __html: issue.body }}
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(issue.body) }}
             />
           )}
         </article>

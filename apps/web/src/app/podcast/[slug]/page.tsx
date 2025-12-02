@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getPodcastEpisodeBySlug } from "@/lib/api";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
+import PodcastPlatformButtons from "@/components/PodcastPlatformButtons";
 
 export default async function PodcastEpisodePage({
   params,
@@ -38,43 +39,33 @@ export default async function PodcastEpisodePage({
             <h1 className="text-4xl font-semibold leading-tight text-white">
               {episode.title}
             </h1>
-            {episode.publishDate && (
-              <p className="mt-4 text-sm uppercase tracking-wide text-zinc-500">
-                {new Date(episode.publishDate).toLocaleDateString("it-IT", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            )}
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm uppercase tracking-wide text-zinc-500">
+              {episode.publishDate && (
+                <p>
+                  {new Date(episode.publishDate).toLocaleDateString("it-IT", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
+              {episode.durationSeconds && (
+                <p>
+                  {Math.floor(episode.durationSeconds / 60)} min
+                </p>
+              )}
+            </div>
           </div>
 
           {episode.summary && (
             <p className="text-lg text-zinc-300">{episode.summary}</p>
           )}
 
-          <div className="flex flex-wrap gap-4">
-            {episode.spotifyLink && (
-              <a
-                href={episode.spotifyLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-green-500 px-6 py-3 font-semibold text-white transition hover:bg-green-600"
-              >
-                Ascolta su Spotify
-              </a>
-            )}
-            {episode.appleLink && (
-              <a
-                href={episode.appleLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-white/20 px-6 py-3 font-semibold text-white transition hover:border-white/40"
-              >
-                Ascolta su Apple Podcasts
-              </a>
-            )}
-          </div>
+          <PodcastPlatformButtons
+            spotifyLink={episode.spotifyLink}
+            appleLink={episode.appleLink}
+            youtubeLink={episode.youtubeLink}
+          />
         </article>
       </div>
     </MainLayout>

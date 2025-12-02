@@ -8,7 +8,7 @@ Monorepo di partenza per una media company moderna composta da:
 - `apps/cms`: backend editoriale Strapi 5 in TypeScript, pronto per Postgres
 - `docker-compose.yml`: servizio Postgres 16 per sviluppo locale
 
-L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area pubblica, contenuti premium e readiness per paywall/abbonamenti.
+L'obiettivo è offrire un CMS piacevole da usare, facile da gestire e completo di backend editoriale e frontend pubblico già pronti per contenuti pubblici e premium.
 
 ### Stack
 

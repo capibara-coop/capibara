@@ -1,8 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  // Vercel ottimizza automaticamente Next.js, ma puoi aggiungere configurazioni qui se necessario
+  // Configurazione immagini remote (Strapi CMS)
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "capibara-1z0m.onrender.com",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "1337",
+        pathname: "/uploads/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

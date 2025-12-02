@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <MainLayout>
       <div className="space-y-10">
         <section className="space-y-4">
-          <p className="eyebrow">Privacy</p>
+          <p className="eyebrow eyebrow--page">Privacy</p>
           <h1 className="text-3xl font-semibold text-white">
             Informativa sul trattamento dei dati personali
           </h1>

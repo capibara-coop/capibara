@@ -5,7 +5,7 @@ export default function ChiSiamoPage() {
     <MainLayout>
       <div className="space-y-12">
         <section className="space-y-4">
-          <p className="eyebrow">Chi siamo</p>
+          <p className="eyebrow eyebrow--page">Chi siamo</p>
           <h1 className="text-4xl font-semibold text-white">
             Capibara è un progetto di informazione che sceglie da che parte stare.
           </h1>
