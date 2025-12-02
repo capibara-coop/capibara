@@ -93,6 +93,15 @@ https://tuo-frontend.vercel.app
 ```
 Sostituisci con l'URL reale del tuo frontend su Vercel.
 
+**CLOUDINARY_NAME, CLOUDINARY_KEY, CLOUDINARY_SECRET** (per storage immagini persistente):
+```
+CLOUDINARY_NAME=your-cloud-name
+CLOUDINARY_KEY=your-api-key
+CLOUDINARY_SECRET=your-api-secret
+```
+Ottieni queste credenziali da [Cloudinary Console](https://cloudinary.com/console). 
+**IMPORTANTE**: Senza queste variabili, le immagini verranno perse ad ogni deploy!
+
 **APP_KEYS** (se non generata automaticamente):
 Genera 4 chiavi separate:
 ```bash
