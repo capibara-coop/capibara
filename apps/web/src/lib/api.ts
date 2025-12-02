@@ -5,6 +5,60 @@ declare const process: {
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "https://capibara-1z0m.onrender.com";
 
+// Helper per costruire le URL complete dei media di Strapi (immagini, ecc.)
+export function getStrapiMediaUrl(path?: string | null): string | null {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  return `${STRAPI_URL}${path}`;
+}
+
+// Helper generico per estrarre heroImage da strutture diverse (Strapi 4/5, singolo o array)
+export function extractHeroImage(
+  media: unknown,
+): { url: string | null; alt: string | null } {
+  if (!media) {
+    return { url: null, alt: null };
+  }
+
+  const m: any = media;
+
+  // Caso 1: struttura { data: { attributes: { url, alternativeText } } }
+  if (m.data?.attributes?.url) {
+    return {
+      url: getStrapiMediaUrl(m.data.attributes.url),
+      alt: m.data.attributes.alternativeText ?? null,
+    };
+  }
+
+  // Caso 2: media singolo: { url, alternativeText, ... }
+  if (m.url) {
+    return {
+      url: getStrapiMediaUrl(m.url),
+      alt: m.alternativeText ?? null,
+    };
+  }
+
+  // Caso 3: array di media: [{ url, alternativeText, ... }]
+  if (Array.isArray(m) && m[0]?.url) {
+    return {
+      url: getStrapiMediaUrl(m[0].url),
+      alt: m[0].alternativeText ?? null,
+    };
+  }
+
+  // Caso 4: struttura { data: [{ attributes: { url, alternativeText } }, ...] }
+  if (Array.isArray(m.data) && m.data[0]?.attributes?.url) {
+    return {
+      url: getStrapiMediaUrl(m.data[0].attributes.url),
+      alt: m.data[0].attributes.alternativeText ?? null,
+    };
+  }
+
+  return { url: null, alt: null };
+}
+
 type NextFetchInit = RequestInit & {
   next?: {
     revalidate?: number;
@@ -148,6 +202,7 @@ type PodcastEpisode = EpisodeBase & {
   durationSeconds?: number | null;
   spotifyLink?: string | null;
   appleLink?: string | null;
+  youtubeLink?: string | null;
 };
 
 type NewsletterIssue = EpisodeBase & {

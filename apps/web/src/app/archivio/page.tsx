@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
+import { extractHeroImage } from "@/lib/api";
 import { Search } from "lucide-react";
 
 function ArchivioContent() {
@@ -111,6 +112,17 @@ function ArchivioContent() {
                             summary: episode.synopsis ?? episode.summary ?? "",
                             tag: "Video",
                             accent,
+                            ...(episode.heroImage
+                              ? (() => {
+                                  const { url, alt } = extractHeroImage(
+                                    episode.heroImage,
+                                  );
+                                  return {
+                                    imageUrl: url ?? undefined,
+                                    imageAlt: alt ?? episode.title,
+                                  };
+                                })()
+                              : {}),
                             locked: episode.isPremium ?? false,
                             slug: episode.slug,
                             type: "video",
@@ -141,6 +153,17 @@ function ArchivioContent() {
                             summary: episode.summary ?? episode.synopsis ?? "",
                             tag: "Podcast",
                             accent,
+                            ...(episode.heroImage
+                              ? (() => {
+                                  const { url, alt } = extractHeroImage(
+                                    episode.heroImage,
+                                  );
+                                  return {
+                                    imageUrl: url ?? undefined,
+                                    imageAlt: alt ?? episode.title,
+                                  };
+                                })()
+                              : {}),
                             locked: episode.isPremium ?? false,
                             slug: episode.slug,
                             type: "podcast",
@@ -171,6 +194,17 @@ function ArchivioContent() {
                             summary: issue.excerpt ?? issue.summary ?? "",
                             tag: "Newsletter",
                             accent,
+                            ...(issue.heroImage
+                              ? (() => {
+                                  const { url, alt } = extractHeroImage(
+                                    issue.heroImage,
+                                  );
+                                  return {
+                                    imageUrl: url ?? undefined,
+                                    imageAlt: alt ?? issue.title,
+                                  };
+                                })()
+                              : {}),
                             locked: issue.isPremium ?? true,
                             slug: issue.slug,
                             type: "newsletter",
@@ -186,21 +220,28 @@ function ArchivioContent() {
                 <section className="space-y-4">
                   <h2 className="text-2xl font-semibold text-white">Articoli</h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {results.articles.map((article) => (
-                      <ContentCard
-                        key={article.slug}
-                        entry={{
-                          title: article.title ?? "Untitled",
-                          date: formatDate(article.publishDate),
-                          summary: article.excerpt ?? "",
-                          tag: "Articolo",
-                          accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
-                          locked: article.isPremium ?? false,
-                          slug: article.slug,
-                          type: "article",
-                        }}
-                      />
-                    ))}
+                    {results.articles.map((article) => {
+                      const { url, alt } = extractHeroImage(article.heroImage);
+
+                      return (
+                        <ContentCard
+                          key={article.slug}
+                          entry={{
+                            title: article.title ?? "Untitled",
+                            date: formatDate(article.publishDate),
+                            summary: article.excerpt ?? "",
+                            tag: "Articolo",
+                            accent:
+                              "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
+                            imageUrl: url ?? undefined,
+                            imageAlt: alt ?? article.title,
+                            locked: article.isPremium ?? false,
+                            slug: article.slug,
+                            type: "article",
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 </section>
               )}

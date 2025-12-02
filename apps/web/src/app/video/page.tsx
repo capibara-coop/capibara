@@ -1,4 +1,4 @@
-import { getVideoEpisodes } from "@/lib/api";
+import { getVideoEpisodes, extractHeroImage } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
@@ -36,6 +36,9 @@ export default async function VideoPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "video";
                 const accent = getKindAccent(showKind);
 
+                const { url: imageUrl, alt: imageAltRaw } = extractHeroImage(episode.heroImage);
+                const imageAlt = imageAltRaw ?? episode.title;
+
                 return (
                   <ContentCard
                     key={episode.slug}
@@ -45,6 +48,8 @@ export default async function VideoPage({
                       summary: episode.synopsis ?? episode.summary ?? "",
                       tag: "Video",
                       accent,
+                      imageUrl: imageUrl ?? undefined,
+                      imageAlt,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "video",

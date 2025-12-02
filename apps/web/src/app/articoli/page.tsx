@@ -1,4 +1,4 @@
-import { getArticles } from "@/lib/api";
+import { getArticles, extractHeroImage } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate } from "@/components/ContentCard";
 import Link from "next/link";
@@ -29,21 +29,27 @@ export default async function ArticoliPage({
         ) : (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
-                <ContentCard
-                  key={article.slug}
-                  entry={{
-                    title: article.title ?? "Untitled",
-                    date: formatDate(article.publishDate),
-                    summary: article.excerpt ?? "",
-                    tag: "Articolo",
-                    accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
-                    locked: article.isPremium ?? false,
-                    slug: article.slug,
-                    type: "article",
-                  }}
-                />
-              ))}
+              {articles.map((article) => {
+                const { url, alt } = extractHeroImage(article.heroImage);
+
+                return (
+                  <ContentCard
+                    key={article.slug}
+                    entry={{
+                      title: article.title ?? "Untitled",
+                      date: formatDate(article.publishDate),
+                      summary: article.excerpt ?? "",
+                      tag: "Articolo",
+                      accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? article.title,
+                      locked: article.isPremium ?? false,
+                      slug: article.slug,
+                      type: "article",
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {pagination.pageCount > 1 && (

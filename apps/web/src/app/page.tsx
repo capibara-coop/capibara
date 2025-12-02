@@ -3,6 +3,7 @@ import {
   getLatestVideoEpisodes,
   getPremiumNewsletterIssues,
   getLatestArticles,
+  extractHeroImage,
   type Show,
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
@@ -28,7 +29,7 @@ export default async function Home() {
       <header className="hero flex flex-col rounded-3xl border p-8 lg:flex-row">
         <div className="flex flex-1 flex-col gap-8 lg:flex-row lg:items-end">
           <div className="flex-1">
-            <p className="eyebrow">
+            <p className="eyebrow eyebrow--brand">
               Capibara • informazione
             </p>
             <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
@@ -59,7 +60,7 @@ export default async function Home() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="eyebrow">Capibara Originals</p>
+                <p className="eyebrow eyebrow--originals">Capibara Originals</p>
                 <h3 className="section-heading text-2xl font-semibold">
                   Storied Network
                 </h3>
@@ -78,6 +79,23 @@ export default async function Home() {
                   (showData?.attributes?.kind as Show["kind"]) ?? "video";
                 const accent = getKindAccent(showKind);
 
+                // Debug: log heroImage structure lato server
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Video episode heroImage:', {
+                    slug: episode.slug,
+                    hasHeroImage: !!episode.heroImage,
+                    heroImage: episode.heroImage,
+                    hasData: !!episode.heroImage?.data,
+                    data: episode.heroImage?.data,
+                    hasAttributes: !!episode.heroImage?.data?.attributes,
+                    url: episode.heroImage?.data?.attributes?.url,
+                  });
+                }
+
+                // Estrae URL e alt da qualsiasi struttura di media supportata
+                const { url: imageUrl, alt: imageAltRaw } = extractHeroImage(episode.heroImage);
+                const imageAlt = imageAltRaw ?? episode.title;
+
                 return (
                   <ContentCard
                     key={episode.slug}
@@ -87,6 +105,8 @@ export default async function Home() {
                       summary: episode.synopsis ?? episode.summary ?? "",
                       tag: "Video",
                       accent,
+                      imageUrl: imageUrl ?? undefined,
+                      imageAlt,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "video",
@@ -101,7 +121,7 @@ export default async function Home() {
             <div className="space-y-6 rounded-3xl border border-white/10 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="eyebrow">Podcast</p>
+                  <p className="eyebrow eyebrow--podcast">Podcast</p>
                   <h3 className="section-heading text-2xl font-semibold">
                     VentiQuaranta
                   </h3>
@@ -111,26 +131,32 @@ export default async function Home() {
                 </span>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-              {validPodcastDrops.map((podcast) => (
-                <ContentCard
-                  key={podcast.slug}
-                  entry={{
-                    title: podcast.title ?? "Untitled",
-                    date: formatDate(podcast.publishDate),
-                    summary: podcast.summary ?? podcast.synopsis ?? "",
-                    tag: "Podcast",
-                    accent: getKindAccent("podcast"),
-                    locked: podcast.isPremium ?? false,
-                    slug: podcast.slug,
-                    type: "podcast",
-                  }}
-                />
-              ))}
+              {validPodcastDrops.map((podcast) => {
+                const { url, alt } = extractHeroImage(podcast.heroImage);
+
+                return (
+                  <ContentCard
+                    key={podcast.slug}
+                    entry={{
+                      title: podcast.title ?? "Untitled",
+                      date: formatDate(podcast.publishDate),
+                      summary: podcast.summary ?? podcast.synopsis ?? "",
+                      tag: "Podcast",
+                      accent: getKindAccent("podcast"),
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? podcast.title,
+                      locked: podcast.isPremium ?? false,
+                      slug: podcast.slug,
+                      type: "podcast",
+                    }}
+                  />
+                );
+              })}
               </div>
             </div>
             <div className="space-y-6 rounded-3xl border border-white/10 p-6">
               <div>
-                <p className="eyebrow">Newsletter</p>
+                <p className="eyebrow eyebrow--newsletter">Newsletter</p>
                 <h3 className="section-heading text-2xl font-semibold">
                   Area riservata
                 </h3>
@@ -141,21 +167,27 @@ export default async function Home() {
                 </p>
               </div>
               <div className="space-y-4">
-              {validPremiumLetters.map((letter) => (
-                <ContentCard
-                  key={letter.slug}
-                  entry={{
-                    title: letter.title ?? "Untitled",
-                    date: formatDate(letter.publishDate),
-                    summary: letter.excerpt ?? letter.summary ?? "",
-                    tag: "Newsletter",
-                    accent: getKindAccent("newsletter"),
-                    locked: letter.isPremium ?? true,
-                    slug: letter.slug,
-                    type: "newsletter",
-                  }}
-                />
-              ))}
+              {validPremiumLetters.map((letter) => {
+                const { url, alt } = extractHeroImage(letter.heroImage);
+
+                return (
+                  <ContentCard
+                    key={letter.slug}
+                    entry={{
+                      title: letter.title ?? "Untitled",
+                      date: formatDate(letter.publishDate),
+                      summary: letter.excerpt ?? letter.summary ?? "",
+                      tag: "Newsletter",
+                      accent: getKindAccent("newsletter"),
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? letter.title,
+                      locked: letter.isPremium ?? true,
+                      slug: letter.slug,
+                      type: "newsletter",
+                    }}
+                  />
+                );
+              })}
               </div>
               <button className="w-full rounded-2xl border border-white/20 px-4 py-3 text-left text-sm text-zinc-300 transition hover:border-white/50 hover:text-white">
                 Esplora i benefit per gli abbonati →
@@ -167,7 +199,7 @@ export default async function Home() {
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="eyebrow">Editoriale</p>
+                  <p className="eyebrow eyebrow--editorial">Editoriale</p>
                   <h3 className="section-heading text-2xl font-semibold">
                     Articoli e approfondimenti di parte
                   </h3>
@@ -180,21 +212,27 @@ export default async function Home() {
                 </Link>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {validArticles.map((article) => (
-                  <ContentCard
-                    key={article.slug}
-                    entry={{
-                      title: article.title ?? "Untitled",
-                      date: formatDate(article.publishDate),
-                      summary: article.excerpt ?? "",
-                      tag: "Articolo",
-                      accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
-                      locked: article.isPremium ?? false,
-                      slug: article.slug,
-                      type: "article",
-                    }}
-                  />
-                ))}
+                {validArticles.map((article) => {
+                  const { url, alt } = extractHeroImage(article.heroImage);
+
+                  return (
+                    <ContentCard
+                      key={article.slug}
+                      entry={{
+                        title: article.title ?? "Untitled",
+                        date: formatDate(article.publishDate),
+                        summary: article.excerpt ?? "",
+                        tag: "Articolo",
+                        accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
+                        imageUrl: url ?? undefined,
+                        imageAlt: alt ?? article.title,
+                        locked: article.isPremium ?? false,
+                        slug: article.slug,
+                        type: "article",
+                      }}
+                    />
+                  );
+                })}
               </div>
             </section>
           )}

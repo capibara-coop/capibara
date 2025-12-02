@@ -3,6 +3,7 @@ import {
   getLatestPodcastEpisodes,
   getPremiumNewsletterIssues,
   getLatestArticles,
+  extractHeroImage,
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
@@ -97,6 +98,15 @@ export default async function FeedPage() {
                       item.contentType === "article"
                         ? "from-blue-500/30 via-indigo-500/20 to-purple-900/40"
                         : accent,
+                    ...(() => {
+                      const { url, alt } = extractHeroImage(
+                        (item as any).heroImage,
+                      );
+                      return {
+                        imageUrl: url ?? undefined,
+                        imageAlt: alt ?? item.title,
+                      };
+                    })(),
                     locked: item.isPremium ?? false,
                     slug: item.slug,
                     type: item.contentType,

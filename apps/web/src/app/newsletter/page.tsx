@@ -1,4 +1,4 @@
-import { getNewsletterIssues } from "@/lib/api";
+import { getNewsletterIssues, extractHeroImage } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
@@ -36,6 +36,8 @@ export default async function NewsletterPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "newsletter";
                 const accent = getKindAccent(showKind);
 
+                const { url, alt } = extractHeroImage(issue.heroImage);
+
                 return (
                   <ContentCard
                     key={issue.slug}
@@ -45,6 +47,8 @@ export default async function NewsletterPage({
                       summary: issue.excerpt ?? issue.summary ?? "",
                       tag: "Newsletter",
                       accent,
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? issue.title,
                       locked: issue.isPremium ?? true,
                       slug: issue.slug,
                       type: "newsletter",

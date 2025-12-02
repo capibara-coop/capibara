@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getArticleBySlug } from "@/lib/api";
+import { getArticleBySlug, getStrapiMediaUrl } from "@/lib/api";
+import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { Clock } from "lucide-react";
@@ -68,7 +69,10 @@ export default async function ArticlePage({
           {article.heroImage?.data?.attributes?.url && (
             <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
               <img
-                src={`${process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337"}${article.heroImage.data.attributes.url}`}
+                src={
+                  getStrapiMediaUrl(article.heroImage.data.attributes.url) ??
+                  article.heroImage.data.attributes.url
+                }
                 alt={article.heroImage.data.attributes.alternativeText || article.title}
                 className="h-full w-full object-cover"
               />
@@ -77,8 +81,8 @@ export default async function ArticlePage({
 
           {article.body && (
             <div
-              className="prose prose-invert max-w-none text-zinc-300 prose-headings:text-white prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-code:text-blue-400"
-              dangerouslySetInnerHTML={{ __html: article.body }}
+              className="prose prose-invert max-w-none text-zinc-300"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(article.body) }}
             />
           )}
 

@@ -1,4 +1,4 @@
-import { getPodcastEpisodes } from "@/lib/api";
+import { getPodcastEpisodes, extractHeroImage } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
@@ -36,6 +36,8 @@ export default async function PodcastPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "podcast";
                 const accent = getKindAccent(showKind);
 
+                const { url, alt } = extractHeroImage(episode.heroImage);
+
                 return (
                   <ContentCard
                     key={episode.slug}
@@ -45,6 +47,8 @@ export default async function PodcastPage({
                       summary: episode.summary ?? episode.synopsis ?? "",
                       tag: "Podcast",
                       accent,
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? episode.title,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "podcast",

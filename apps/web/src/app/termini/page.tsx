@@ -5,7 +5,7 @@ export default function TerminiPage() {
     <MainLayout>
       <div className="space-y-10">
         <section className="space-y-4">
-          <p className="eyebrow">Termini di utilizzo</p>
+          <p className="eyebrow eyebrow--page">Termini di utilizzo</p>
           <h1 className="text-3xl font-semibold text-white">
             Condizioni d&apos;uso del sito e dei contenuti
           </h1>

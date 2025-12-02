@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getVideoEpisodeBySlug } from "@/lib/api";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
+import { toYoutubeEmbedUrl } from "@/lib/youtube";
 
 export default async function VideoEpisodePage({
   params,
@@ -53,10 +54,10 @@ export default async function VideoEpisodePage({
             <p className="text-lg text-zinc-300">{episode.synopsis}</p>
           )}
 
-          {episode.videoUrl && (
+          {toYoutubeEmbedUrl(episode.videoUrl) && (
             <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
               <iframe
-                src={episode.videoUrl}
+                src={toYoutubeEmbedUrl(episode.videoUrl) ?? undefined}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
