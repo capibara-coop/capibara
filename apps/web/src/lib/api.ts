@@ -586,6 +586,7 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
       videos: [],
       podcasts: [],
       newsletters: [],
+      articles: [],
       pagination: {
         page: 1,
         pageSize,
@@ -596,7 +597,7 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
   }
 
   const searchQuery = query.trim();
-  const [videosRes, podcastsRes, newslettersRes] = await Promise.all([
+  const [videosRes, podcastsRes, newslettersRes, articlesRes] = await Promise.all([
     strapiFetch<StrapiPaginatedResponse<VideoEpisode>>(
       "/api/video-episodes",
       {
@@ -643,6 +644,22 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
         revalidate: 60,
       },
     ),
+    strapiFetch<StrapiPaginatedResponse<Article>>(
+      "/api/articles",
+      {
+        query: {
+          populate: "*",
+          "publicationState": "live",
+          "filters[$or][0][title][$containsi]": searchQuery,
+          "filters[$or][1][excerpt][$containsi]": searchQuery,
+          "filters[$or][2][body][$containsi]": searchQuery,
+          "pagination[page]": page,
+          "pagination[pageSize]": pageSize,
+          "sort[0]": "publishDate:desc",
+        },
+        revalidate: 60,
+      },
+    ),
   ]);
 
   const videos = (videosRes.data?.map((item) => {
@@ -660,14 +677,21 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
     return item;
   }) ?? []) as NewsletterIssue[];
 
+  const articles = (articlesRes.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as Article[];
+
   const total = (videosRes.meta?.pagination?.total ?? 0) +
     (podcastsRes.meta?.pagination?.total ?? 0) +
-    (newslettersRes.meta?.pagination?.total ?? 0);
+    (newslettersRes.meta?.pagination?.total ?? 0) +
+    (articlesRes.meta?.pagination?.total ?? 0);
 
   return {
     videos,
     podcasts,
     newsletters,
+    articles,
     pagination: {
       page,
       pageSize,
@@ -675,6 +699,7 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
         videosRes.meta?.pagination?.pageCount ?? 1,
         podcastsRes.meta?.pagination?.pageCount ?? 1,
         newslettersRes.meta?.pagination?.pageCount ?? 1,
+        articlesRes.meta?.pagination?.pageCount ?? 1,
       ),
       total,
     },
