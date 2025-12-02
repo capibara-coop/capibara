@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Archive,
   BadgeEuro,
@@ -13,28 +14,40 @@ import {
   Search,
   Star,
   Timer,
+  Sun,
+  Moon,
   Users,
-  type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 type NavLink = {
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
   notify?: boolean;
   locked?: boolean;
   children?: string[];
 };
 
+const CapibaraLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <Image
+    src="/logo_capibara.png"
+    alt="Capibara"
+    width={24}
+    height={24}
+    className={`rounded-md bg-white/5 object-contain p-0.5 ${className ?? ""}`}
+  />
+);
+
 const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
   { label: "Feed", icon: List, href: "/feed" },
-  { label: "Video", icon: PlayCircle, href: "/video" },
-  { label: "Podcast", icon: Headphones, href: "/podcast", notify: true },
   { label: "Articoli", icon: Timer, href: "/articoli" },
+  { label: "Podcast", icon: Headphones, href: "/podcast", notify: true },
+  { label: "Video", icon: PlayCircle, href: "/video" },
   {
     label: "Newsletter",
     icon: Mail,
@@ -42,50 +55,75 @@ const primaryNav: NavLink[] = [
     locked: true,
     children: ["Capibara Insider", "Deep Dive"],
   },
-  { label: "Contenuti Extra", icon: Star, href: "/", locked: true },
   { label: "Archivio", icon: Archive, href: "/archivio" },
+  { label: "Contenuti Extra", icon: Star, href: "/extra", locked: true },
 ];
 
 const utilityNav: NavLink[] = [
-  { label: "Partner", icon: Users, href: "/partner" },
+  { label: "Chi siamo", icon: CapibaraLogoIcon, href: "/chi-siamo" },
   { label: "Abbonamenti", icon: BadgeEuro, href: "/abbonamenti" },
-  { label: "Messaggi", icon: MessageCircle, href: "/", notify: true },
+  { label: "Partner", icon: Users, href: "/partner" },
 ];
 
 const NavGroup = ({
   title,
   links,
   currentPath,
+  isDark,
 }: {
   title?: string;
   links: NavLink[];
   currentPath: string;
+  isDark: boolean;
 }) => (
   <div className="space-y-1">
     {title && (
-      <p className="px-3 text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
+      <p
+        className={`px-3 text-xs font-semibold uppercase tracking-[0.25em] ${
+          isDark ? "text-zinc-500" : "text-zinc-500"
+        }`}
+      >
         {title}
       </p>
     )}
     {links.map((item) => {
       const isActive = currentPath === item.href;
+      const baseClasses = isDark
+        ? isActive
+          ? "bg-white/10 text-white"
+          : "text-zinc-300 hover:bg-white/5"
+        : isActive
+          ? "bg-zinc-900 text-white"
+          : "text-zinc-700 hover:bg-zinc-100";
+
+      const iconClasses = isDark
+        ? isActive
+          ? "text-white"
+          : "text-zinc-500"
+        : isActive
+          ? "text-white"
+          : "text-zinc-500";
+
+      const lockedClasses = isDark
+        ? "bg-white/10 text-white/70"
+        : "bg-zinc-900 text-zinc-100";
+
+      const childrenBorder = isDark ? "border-white/10" : "border-zinc-200";
+      const childrenText = isDark ? "text-zinc-500" : "text-zinc-500";
+
       return (
         <Link
           key={item.label}
           href={item.href}
-          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${
-            isActive
-              ? "bg-white/10 text-white"
-              : "text-zinc-300 hover:bg-white/5"
-          }`}
+          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${baseClasses}`}
         >
           <div className="flex items-center gap-3">
-            <item.icon
-              className={`h-4 w-4 ${isActive ? "text-white" : "text-zinc-500"}`}
-            />
+            <item.icon className={`h-4 w-4 ${iconClasses}`} />
             <span className="flex-1">{item.label}</span>
             {item.locked && (
-              <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">
+              <span
+                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${lockedClasses}`}
+              >
                 <Lock className="h-3 w-3" />
                 Solo membri
               </span>
@@ -95,7 +133,9 @@ const NavGroup = ({
             )}
           </div>
           {item.children && (
-            <div className="mt-2 space-y-1 border-l border-white/10 pl-5 text-xs text-zinc-500">
+            <div
+              className={`mt-2 space-y-1 border-l pl-5 text-xs ${childrenBorder} ${childrenText}`}
+            >
               {item.children.map((child) => (
                 <div key={child}>{child}</div>
               ))}
@@ -114,81 +154,165 @@ export default function MainLayout({
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [theme, setTheme] = React.useState<"dark" | "light">("dark");
+
+  const isDark = theme === "dark";
 
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white">
-      <aside className="sticky top-0 hidden h-screen w-72 flex-shrink-0 flex-col border-r border-white/5 bg-black/40 px-4 py-6 lg:flex">
+    <div
+      data-theme={theme}
+      className={`flex min-h-screen ${
+        isDark ? "bg-[#050505] text-white" : "bg-zinc-50 text-zinc-900"
+      }`}
+    >
+      <aside
+        className={`sticky top-0 hidden h-screen w-72 flex-shrink-0 flex-col px-4 py-6 lg:flex ${
+          isDark ? "border-r border-white/5 bg-black/40" : "border-r border-zinc-200 bg-white"
+        }`}
+      >
         <Link href="/" className="flex items-center justify-between px-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-              Capibara
-            </p>
-            <p className="text-2xl font-semibold">Media β</p>
+          <div className="flex items-center gap-3">
+            <Image
+              src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+              alt="Capibara logo"
+              width={64}
+              height={64}
+              className="h-14 w-14 rounded-2xl bg-white/5 object-contain p-2"
+              priority
+            />
+            <div className="flex flex-col">
+              <span
+                className={`text-base font-semibold tracking-wide ${
+                  isDark ? "text-white" : "text-zinc-900"
+                }`}
+              >
+                Capibara
+              </span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.28em] text-zinc-500">
+                Informazione
+              </span>
+            </div>
           </div>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-300">
-            Auto
-          </span>
         </Link>
         <div className="mt-8 flex-1 space-y-8 overflow-y-auto">
-          <NavGroup links={primaryNav} currentPath={pathname} />
-          <NavGroup title="Community" links={utilityNav} currentPath={pathname} />
+          <NavGroup links={primaryNav} currentPath={pathname} isDark={isDark} />
+          <NavGroup
+            title="Community"
+            links={utilityNav}
+            currentPath={pathname}
+            isDark={isDark}
+          />
         </div>
         <div className="mt-4 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
-          <p>Chi siamo • Contattaci • Diventa partner</p>
-          <p>Privacy • Termini</p>
+          <p className="flex flex-wrap gap-2">
+            <span>Contattaci</span>
+            <span>•</span>
+            <span>Diventa partner</span>
+          </p>
+          <p className="flex flex-wrap gap-2">
+            <Link href="/privacy" className="hover:text-zinc-300">
+              Privacy
+            </Link>
+            <span>•</span>
+            <Link href="/termini" className="hover:text-zinc-300">
+              Termini
+            </Link>
+          </p>
         </div>
       </aside>
 
       <div className="flex-1">
-        <div className="flex flex-col gap-6 border-b border-white/5 bg-black/30 px-4 py-6 sm:px-6 lg:px-12">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-                Ricorda di attivare le notifiche push
-              </p>
-              <h1 className="text-3xl font-semibold">Capibara Media</h1>
-            </div>
+        <div
+          className={`flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-12 ${
+            isDark
+              ? "border-b border-white/5 bg-black/30"
+              : "border-b border-zinc-200 bg-white/70 backdrop-blur"
+          }`}
+        >
+          <div className="flex justify-end">
             <div className="flex gap-3 text-sm">
               {session ? (
                 <>
-                  <span className="hidden text-zinc-300 sm:inline">
+                  <span
+                    className={`hidden sm:inline ${
+                      isDark ? "text-zinc-300" : "text-zinc-700"
+                    }`}
+                  >
                     Ciao, {session.user?.name ?? "utente"}
                   </span>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="rounded-full border border-white/10 px-4 py-2 text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className={`rounded-full px-4 py-2 text-sm transition ${
+                      isDark
+                        ? "border border-white/10 text-zinc-300 hover:border-white/40 hover:text-white"
+                        : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 hover:text-zinc-900 bg-white"
+                    }`}
                   >
                     Esci
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  className="rounded-full bg-white/90 px-4 py-2 font-semibold text-black"
-                >
-                  Accedi
-                </Link>
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+                    }
+                    className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                      isDark
+                        ? "border border-white/10 bg-white/5 text-zinc-200 hover:border-white/40 hover:bg-white/10"
+                        : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-900 hover:text-zinc-900"
+                    }`}
+                  >
+                    {isDark ? (
+                      <>
+                        <Moon className="h-3.5 w-3.5" />
+                        <span>Dark</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sun className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Light</span>
+                      </>
+                    )}
+                  </button>
+                  <Link
+                    href="/login"
+                    className="rounded-full bg-white/90 px-4 py-2 font-semibold text-black"
+                  >
+                    Accedi
+                  </Link>
+                </>
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <form
-              action="/archivio"
-              method="get"
-              className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-            >
-              <Search className="h-4 w-4 text-zinc-500" />
-              <input
-                name="q"
-                type="search"
-                className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
-                placeholder="Cerca episodi, podcast o newsletter"
-              />
-            </form>
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.35em] text-zinc-500">
-              <span>Breaking News</span>
-              <div className="h-px w-10 bg-white/20" />
-              <span>Live 24/7</span>
+          <div className="flex justify-center">
+            <div className="w-full max-w-6xl">
+              <form
+                action="/archivio"
+                method="get"
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 ${
+                  isDark
+                    ? "border border-white/10 bg-white/5"
+                    : "border border-zinc-300 bg-white"
+                }`}
+              >
+                <Search
+                  className={`h-4 w-4 ${
+                    isDark ? "text-zinc-500" : "text-zinc-400"
+                  }`}
+                />
+                <input
+                  name="q"
+                  type="search"
+                  className={`w-full bg-transparent text-sm focus:outline-none ${
+                    isDark
+                      ? "text-white placeholder:text-zinc-500"
+                      : "text-zinc-900 placeholder:text-zinc-400"
+                  }`}
+                  placeholder="Cerca episodi, podcast o newsletter"
+                />
+              </form>
             </div>
           </div>
         </div>

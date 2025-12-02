@@ -1,4 +1,15 @@
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
+// Tipizzazione minimale di `process.env` per evitare errori di lint/TS
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "https://capibara-1z0m.onrender.com";
+
+type NextFetchInit = RequestInit & {
+  next?: {
+    revalidate?: number;
+  };
+};
 
 type FetchOptions = {
   cache?: RequestCache;
@@ -38,7 +49,7 @@ async function strapiFetch<T>(
         "Content-Type": "application/json",
         ...(headers ?? {}),
       },
-    });
+    } as NextFetchInit);
 
     if (!res.ok) {
       // Don't log 403 as error if it's just permissions not configured yet
