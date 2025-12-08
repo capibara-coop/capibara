@@ -224,6 +224,34 @@ body {
   @apply mt-auto text-xs uppercase tracking-wide text-zinc-500;
 }
 
+/* Content Card colored borders */
+/* Articoli - Indigo */
+[data-theme="dark"] .content-card[data-border-color="indigo-500"] {
+  border-color: rgb(99 102 241 / 0.5);
+}
+
+[data-theme="light"] .content-card[data-border-color="indigo-500"] {
+  border-color: rgb(99 102 241 / 0.8);
+}
+
+/* Podcast - Teal */
+[data-theme="dark"] .content-card[data-border-color="teal-500"] {
+  border-color: rgb(20 184 166 / 0.5);
+}
+
+[data-theme="light"] .content-card[data-border-color="teal-500"] {
+  border-color: rgb(20 184 166 / 0.8);
+}
+
+/* Video - Purple */
+[data-theme="dark"] .content-card[data-border-color="purple-500"] {
+  border-color: rgb(168 85 247 / 0.5);
+}
+
+[data-theme="light"] .content-card[data-border-color="purple-500"] {
+  border-color: rgb(168 85 247 / 0.8);
+}
+
 /* Locked badge */
 [data-theme="dark"] .locked-badge {
   @apply rounded-full bg-amber-400/10 px-3 py-0.5 text-xs text-amber-200;

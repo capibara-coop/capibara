@@ -52,6 +52,7 @@ export default async function PodcastPage({
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "podcast",
+                      borderColor: "teal-500",
                     }}
                   />
                 );

@@ -113,6 +113,7 @@ export default async function Home() {
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "video",
+                      borderColor: "purple-500",
                     }}
                   />
                 );
@@ -151,6 +152,7 @@ export default async function Home() {
                       locked: podcast.isPremium ?? false,
                       slug: podcast.slug,
                       type: "podcast",
+                      borderColor: "teal-500",
                     }}
                   />
                 );
@@ -232,6 +234,7 @@ export default async function Home() {
                         locked: article.isPremium ?? false,
                         slug: article.slug,
                         type: "article",
+                        borderColor: "indigo-500",
                       }}
                     />
                   );
