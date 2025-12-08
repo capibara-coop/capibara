@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Users,
+  UserCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,6 +31,8 @@ type NavLink = {
   notify?: boolean;
   locked?: boolean;
   children?: string[];
+  color?: string; // Colore per quando è attivo (dark mode)
+  colorLight?: string; // Colore per quando è attivo (light mode)
 };
 
 const CapibaraLogoIcon: React.FC<{ 
@@ -57,9 +60,27 @@ const CapibaraLogoIcon: React.FC<{
 const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
   { label: "Feed", icon: List, href: "/feed" },
-  { label: "Articoli", icon: Timer, href: "/articoli" },
-  { label: "Podcast", icon: Headphones, href: "/podcast" },
-  { label: "Video", icon: PlayCircle, href: "/video" },
+  { 
+    label: "Articoli", 
+    icon: Timer, 
+    href: "/articoli",
+    color: "bg-indigo-500/20 border-indigo-500/50 text-white",
+    colorLight: "bg-indigo-100 border-indigo-500 text-indigo-900"
+  },
+  { 
+    label: "Podcast", 
+    icon: Headphones, 
+    href: "/podcast",
+    color: "bg-teal-500/20 border-teal-500/50 text-white",
+    colorLight: "bg-teal-100 border-teal-500 text-teal-900"
+  },
+  { 
+    label: "Video", 
+    icon: PlayCircle, 
+    href: "/video",
+    color: "bg-purple-500/20 border-purple-500/50 text-white",
+    colorLight: "bg-purple-100 border-purple-500 text-purple-900"
+  },
   {
     label: "Newsletter",
     icon: Mail,
@@ -73,6 +94,7 @@ const primaryNav: NavLink[] = [
 
 const utilityNav: NavLink[] = [
   { label: "Chi siamo", icon: CapibaraLogoIcon, href: "/chi-siamo" },
+  { label: "Redazione", icon: UserCircle, href: "/chi-siamo/redazione" },
   { label: "Abbonamenti", icon: BadgeEuro, href: "/abbonamenti" },
   { label: "Partner", icon: Users, href: "/partner" },
 ];
@@ -87,26 +109,52 @@ const NavGroup = ({
   links: NavLink[];
   currentPath: string;
   isDark: boolean;
-}) => (
-  <div className="space-y-1">
-    {title && (
-      <p
-        className={`px-3 text-xs font-semibold uppercase tracking-[0.25em] ${
-          isDark ? "text-zinc-500" : "text-zinc-500"
-        }`}
-      >
-        {title}
-      </p>
-    )}
-    {links.map((item) => {
-      const isActive = currentPath === item.href;
+}) => {
+  // Controlla se c'è un link più specifico (più lungo) che corrisponde al pathname
+  const hasMoreSpecificMatch = (href: string) => {
+    return links.some(
+      (link) =>
+        link.href !== href &&
+        link.href.startsWith(href + "/") &&
+        currentPath.startsWith(link.href)
+    );
+  };
+
+  return (
+    <div className="space-y-1">
+      {title && (
+        <p
+          className={`px-3 text-xs font-semibold uppercase tracking-[0.25em] ${
+            isDark ? "text-zinc-500" : "text-zinc-500"
+          }`}
+        >
+          {title}
+        </p>
+      )}
+      {links.map((item) => {
+        // Gestisce sia path esatti che path che iniziano con l'href (es: /articoli/[slug])
+        // Ma non attiva un link se c'è un link più specifico che corrisponde
+        const isActive = 
+          (currentPath === item.href || 
+           (item.href !== "/" && currentPath.startsWith(item.href + "/"))) &&
+          !hasMoreSpecificMatch(item.href);
+      
+      // Se il link ha un colore personalizzato, usalo quando è attivo
+      const activeColorClass = isActive && item.color 
+        ? (isDark ? item.color : item.colorLight || item.color)
+        : null;
+      
       const baseClasses = isDark
         ? isActive
-          ? "bg-white/10 text-white"
+          ? activeColorClass || "bg-white/10 text-white"
           : "text-zinc-300 hover:bg-white/5"
         : isActive
-          ? "bg-zinc-900 text-white"
+          ? activeColorClass || "bg-zinc-900 text-white"
           : "text-zinc-700 hover:bg-zinc-100";
+      
+      const borderClass = isActive && item.color
+        ? "border"
+        : "";
 
       const iconClasses = isDark
         ? isActive
@@ -127,7 +175,7 @@ const NavGroup = ({
         <Link
           key={item.label}
           href={item.href}
-          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${baseClasses}`}
+          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${baseClasses} ${borderClass}`}
         >
           <div className="flex items-center gap-3">
             {item.icon === CapibaraLogoIcon ? (
@@ -164,8 +212,9 @@ const NavGroup = ({
         </Link>
       );
     })}
-  </div>
-);
+    </div>
+  );
+};
 
 export default function MainLayout({
   children,

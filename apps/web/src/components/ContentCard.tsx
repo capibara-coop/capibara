@@ -14,6 +14,7 @@ type ContentTile = {
   type?: "video" | "podcast" | "newsletter" | "article";
   imageUrl?: string | null;
   imageAlt?: string | null;
+  borderColor?: string; // Colore bordo opzionale (es: "border-indigo-500/50")
 };
 
 const kindAccent: Record<Show["kind"], string> = {
@@ -60,8 +61,14 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
     });
   }
 
+  // Se borderColor è specificato, aggiunge un attributo data per il colore del border
+  // Le classi CSS personalizzate in globals.css gestiscono i colori per dark/light mode
+  const borderColorAttr = entry.borderColor 
+    ? { "data-border-color": entry.borderColor.replace("border-", "").replace("/50", "") }
+    : {};
+  
   const CardContent = (
-    <article className="content-card">
+    <article className="content-card" {...borderColorAttr}>
       <div className={`relative h-40 rounded-2xl overflow-hidden bg-gradient-to-r ${entry.accent}`}>
         {cardImageUrl ? (
           <Image

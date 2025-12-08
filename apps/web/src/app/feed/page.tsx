@@ -72,6 +72,20 @@ export default async function FeedPage() {
                 item.contentType;
               const accent = getKindAccent(showKind);
 
+              // Determina il colore del bordo in base al tipo di contenuto
+              const getBorderColor = () => {
+                switch (item.contentType) {
+                  case "article":
+                    return "indigo-500";
+                  case "podcast":
+                    return "teal-500";
+                  case "video":
+                    return "purple-500";
+                  default:
+                    return undefined; // Newsletter non ha colore specifico
+                }
+              };
+
               return (
                 <ContentCard
                   key={`${item.contentType}-${item.slug}`}
@@ -110,6 +124,7 @@ export default async function FeedPage() {
                     locked: item.isPremium ?? false,
                     slug: item.slug,
                     type: item.contentType,
+                    borderColor: getBorderColor(),
                   }}
                 />
               );

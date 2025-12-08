@@ -46,6 +46,7 @@ export default async function ArticoliPage({
                       locked: article.isPremium ?? false,
                       slug: article.slug,
                       type: "article",
+                      borderColor: "indigo-500",
                     }}
                   />
                 );

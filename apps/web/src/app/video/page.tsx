@@ -53,6 +53,7 @@ export default async function VideoPage({
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "video",
+                      borderColor: "purple-500",
                     }}
                   />
                 );
