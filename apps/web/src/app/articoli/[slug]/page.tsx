@@ -4,6 +4,63 @@ import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { Clock } from "lucide-react";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getArticleBySlug(slug);
+
+  if (!article) {
+    return {
+      title: "Articolo non trovato",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const articleUrl = `${siteUrl}/articoli/${slug}`;
+  const imageUrl = article.heroImage?.data?.attributes?.url
+    ? getStrapiMediaUrl(article.heroImage.data.attributes.url) || `${siteUrl}${article.heroImage.data.attributes.url}`
+    : `${siteUrl}/logo_capibara.png`;
+
+  const description = article.excerpt || article.body?.substring(0, 160) || "Leggi l'articolo completo su Capibara";
+
+  return {
+    title: article.title,
+    description,
+    keywords: article.tags?.data?.map((tag) => tag.attributes.name) || [],
+    authors: article.author ? [{ name: article.author }] : undefined,
+    openGraph: {
+      type: "article",
+      locale: "it_IT",
+      url: articleUrl,
+      siteName: "Capibara",
+      title: article.title,
+      description,
+      publishedTime: article.publishDate || undefined,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.heroImage?.data?.attributes?.alternativeText || article.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: [imageUrl],
+    },
+    alternates: {
+      canonical: articleUrl,
+    },
+  };
+}
 
 export default async function ArticlePage({
   params,
@@ -17,8 +74,49 @@ export default async function ArticlePage({
     notFound();
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const articleUrl = `${siteUrl}/articoli/${slug}`;
+  const imageUrl = article.heroImage?.data?.attributes?.url
+    ? getStrapiMediaUrl(article.heroImage.data.attributes.url) || `${siteUrl}${article.heroImage.data.attributes.url}`
+    : `${siteUrl}/logo_capibara.png`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt || article.body?.substring(0, 160) || "",
+    image: imageUrl,
+    datePublished: article.publishDate || undefined,
+    author: article.author
+      ? {
+          "@type": "Person",
+          name: article.author,
+        }
+      : {
+          "@type": "Organization",
+          name: "Capibara",
+        },
+    publisher: {
+      "@type": "Organization",
+      name: "Capibara",
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/logo_capibara.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
+    keywords: article.tags?.data?.map((tag) => tag.attributes.name).join(", ") || undefined,
+  };
+
   return (
     <MainLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="space-y-8">
         <Link
           href="/articoli"

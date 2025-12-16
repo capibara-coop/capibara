@@ -9,6 +9,30 @@ import {
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description:
+    "Capibara è una media company indipendente: video, podcast, articoli e newsletter per raccontare lavoro, diritti, conflitti sociali e nuove forme di organizzazione. Storie da chi non ha potere.",
+  openGraph: {
+    type: "website",
+    locale: "it_IT",
+    url: "/",
+    siteName: "Capibara",
+    title: "Capibara - Storie da chi non ha potere",
+    description:
+      "Capibara è una media company indipendente: video, podcast, articoli e newsletter per raccontare lavoro, diritti, conflitti sociali e nuove forme di organizzazione.",
+    images: [
+      {
+        url: "/logo_capibara.png",
+        width: 1200,
+        height: 630,
+        alt: "Capibara Logo",
+      },
+    ],
+  },
+};
 
 export default async function Home() {
   const [videoEpisodes, podcastDrops, premiumLetters, articles] = await Promise.all([

@@ -1,8 +1,62 @@
 import { notFound } from "next/navigation";
-import { getPodcastEpisodeBySlug } from "@/lib/api";
+import { getPodcastEpisodeBySlug, extractHeroImage } from "@/lib/api";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import PodcastPlatformButtons from "@/components/PodcastPlatformButtons";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const episode = await getPodcastEpisodeBySlug(slug);
+
+  if (!episode) {
+    return {
+      title: "Podcast non trovato",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const podcastUrl = `${siteUrl}/podcast/${slug}`;
+  const { url: imageUrl } = extractHeroImage(episode.heroImage);
+  const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
+
+  const description = episode.synopsis || episode.summary || "Ascolta il podcast completo su Capibara";
+
+  return {
+    title: episode.title,
+    description,
+    openGraph: {
+      type: "music.song",
+      locale: "it_IT",
+      url: podcastUrl,
+      siteName: "Capibara",
+      title: episode.title,
+      description,
+      publishedTime: episode.publishDate || undefined,
+      images: [
+        {
+          url: finalImageUrl,
+          width: 1200,
+          height: 630,
+          alt: episode.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: episode.title,
+      description,
+      images: [finalImageUrl],
+    },
+    alternates: {
+      canonical: podcastUrl,
+    },
+  };
+}
 
 export default async function PodcastEpisodePage({
   params,
@@ -16,8 +70,47 @@ export default async function PodcastEpisodePage({
     notFound();
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const podcastPageUrl = `${siteUrl}/podcast/${slug}`;
+  const { url: imageUrl } = extractHeroImage(episode.heroImage);
+  const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "PodcastEpisode",
+    name: episode.title,
+    description: episode.synopsis || episode.summary || "",
+    image: finalImageUrl,
+    datePublished: episode.publishDate || undefined,
+    duration: episode.durationSeconds
+      ? `PT${Math.floor(episode.durationSeconds / 60)}M${episode.durationSeconds % 60}S`
+      : undefined,
+    partOfSeries: {
+      "@type": "PodcastSeries",
+      name: episode.show?.data?.attributes?.title || "Capibara Podcast",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Capibara",
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/logo_capibara.png`,
+      },
+    },
+    ...(episode.spotifyLink && {
+      associatedMedia: {
+        "@type": "MediaObject",
+        contentUrl: episode.spotifyLink,
+      },
+    }),
+  };
+
   return (
     <MainLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="space-y-8">
         <Link
           href="/"
