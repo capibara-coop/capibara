@@ -1,8 +1,62 @@
 import { notFound } from "next/navigation";
-import { getVideoEpisodeBySlug } from "@/lib/api";
+import { getVideoEpisodeBySlug, getStrapiMediaUrl, extractHeroImage } from "@/lib/api";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { toYoutubeEmbedUrl } from "@/lib/youtube";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const episode = await getVideoEpisodeBySlug(slug);
+
+  if (!episode) {
+    return {
+      title: "Video non trovato",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const videoUrl = `${siteUrl}/video/${slug}`;
+  const { url: imageUrl } = extractHeroImage(episode.heroImage);
+  const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
+
+  const description = episode.synopsis || episode.summary || "Guarda il video completo su Capibara";
+
+  return {
+    title: episode.title,
+    description,
+    openGraph: {
+      type: "video.other",
+      locale: "it_IT",
+      url: videoUrl,
+      siteName: "Capibara",
+      title: episode.title,
+      description,
+      publishedTime: episode.publishDate || undefined,
+      images: [
+        {
+          url: finalImageUrl,
+          width: 1200,
+          height: 630,
+          alt: episode.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "player",
+      title: episode.title,
+      description,
+      images: [finalImageUrl],
+    },
+    alternates: {
+      canonical: videoUrl,
+    },
+  };
+}
 
 export default async function VideoEpisodePage({
   params,
@@ -16,8 +70,39 @@ export default async function VideoEpisodePage({
     notFound();
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.coop";
+  const videoPageUrl = `${siteUrl}/video/${slug}`;
+  const { url: imageUrl } = extractHeroImage(episode.heroImage);
+  const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: episode.title,
+    description: episode.synopsis || episode.summary || "",
+    thumbnailUrl: finalImageUrl,
+    uploadDate: episode.publishDate || undefined,
+    contentUrl: episode.videoUrl,
+    embedUrl: toYoutubeEmbedUrl(episode.videoUrl) || episode.videoUrl,
+    duration: episode.durationSeconds
+      ? `PT${Math.floor(episode.durationSeconds / 60)}M${episode.durationSeconds % 60}S`
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "Capibara",
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/logo_capibara.png`,
+      },
+    },
+  };
+
   return (
     <MainLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="space-y-8">
         <Link
           href="/"
