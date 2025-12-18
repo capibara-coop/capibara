@@ -313,7 +313,7 @@ export default function MainLayout({
         <Link href="/" className="flex items-center justify-between px-3">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo_capibara.png"
+              src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
               alt="Capibara logo"
               width={80}
               height={80}
@@ -523,7 +523,7 @@ export default function MainLayout({
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <Image
-                  src="/logo_capibara.png"
+                  src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
                   alt="Capibara logo"
                   width={80}
                   height={80}
