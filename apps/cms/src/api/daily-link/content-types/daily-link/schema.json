@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "daily_links",
+  "info": {
+    "singularName": "daily-link",
+    "pluralName": "daily-links",
+    "displayName": "Daily Link",
+    "description": "Link giornalieri per la newsletter"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "publishDate": {
+      "type": "date",
+      "required": true
+    }
+  }
+}
+

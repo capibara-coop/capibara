@@ -210,6 +210,41 @@ type NewsletterIssue = EpisodeBase & {
   excerpt?: string | null;
 };
 
+type Author = {
+  name: string;
+  bio?: string | null;
+  avatar?: {
+    data: {
+      attributes: {
+        url: string;
+        alternativeText?: string | null;
+      };
+    };
+  } | null;
+};
+
+type DailyLink = {
+  title: string;
+  url: string;
+  description?: string | null;
+  publishDate: string;
+};
+
+type Column = {
+  title: string;
+  description?: string | null;
+  author?: {
+    data: {
+      attributes: Author;
+    } | null;
+  };
+  links: Array<{
+    label: string;
+    url: string;
+    description?: string | null;
+  }>;
+};
+
 type Article = {
   title: string;
   slug: string;
@@ -579,6 +614,47 @@ export async function getNewsletterIssues(page = 1, pageSize = 12) {
   };
 }
 
+export async function getDailyLinks(date?: string) {
+  const targetDate = date ?? new Date().toISOString().split('T')[0];
+  const response = await strapiFetch<StrapiCollectionResponse<DailyLink>>(
+    "/api/daily-links",
+    {
+      query: {
+        "filters[publishDate][$eq]": targetDate,
+        "publicationState": "live",
+        "sort[0]": "createdAt:desc",
+      },
+      revalidate: 60,
+    }
+  );
+
+  return (response.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as DailyLink[];
+}
+
+export async function getColumns() {
+  const response = await strapiFetch<StrapiCollectionResponse<Column>>(
+    "/api/columns",
+    {
+      query: {
+        "populate[0]": "author",
+        "populate[1]": "author.avatar",
+        "populate[2]": "links",
+        "publicationState": "live",
+        "sort[0]": "createdAt:desc",
+      },
+      revalidate: 60,
+    }
+  );
+
+  return (response.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as Column[];
+}
+
 // Search function
 export async function searchContent(query: string, page = 1, pageSize = 12) {
   if (!query || query.trim().length === 0) {
@@ -711,6 +787,9 @@ export type {
   VideoEpisode,
   PodcastEpisode,
   NewsletterIssue,
+  Author,
+  DailyLink,
+  Column,
   Article,
   StrapiCollectionResponse,
   PaginationMeta,
