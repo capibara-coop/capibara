@@ -1,4 +1,4 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreRouter('api::column.column');
+export default factories.createCoreRouter('api::column.column' as any);
 

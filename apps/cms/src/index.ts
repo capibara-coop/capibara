@@ -35,13 +35,13 @@ export default {
     // Test content generation
     try {
       // Check if we already have authors
-      const authors = await strapi.documents('api::author.author').findMany();
+      const authors = await (strapi as any).documents('api::author.author').findMany();
       
       if (authors.length === 0) {
         strapi.log.info('🌱 Seeding test content...');
         
         // Create an author
-        const author = await strapi.documents('api::author.author').create({
+        const author = await (strapi as any).documents('api::author.author').create({
           data: {
             name: 'Giuseppe Aceto',
             bio: 'Fondatore di Capibara e appassionato di tech.',
@@ -50,7 +50,7 @@ export default {
         });
 
         // Create a column
-        await strapi.documents('api::column.column').create({
+        await (strapi as any).documents('api::column.column').create({
           data: {
             title: 'Tech Insights',
             description: 'Riflessioni settimanali sul mondo della tecnologia.',
@@ -73,7 +73,7 @@ export default {
 
         // Create some daily links
         const today = new Date().toISOString().split('T')[0];
-        await strapi.documents('api::daily-link.daily-link').create({
+        await (strapi as any).documents('api::daily-link.daily-link').create({
           data: {
             title: 'Cursor AI è incredibile',
             url: 'https://cursor.sh',
@@ -83,7 +83,7 @@ export default {
           },
         });
 
-        await strapi.documents('api::daily-link.daily-link').create({
+        await (strapi as any).documents('api::daily-link.daily-link').create({
           data: {
             title: 'Next.js 15 rilasciato',
             url: 'https://nextjs.org',
