@@ -93,6 +93,11 @@ const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
+  {
+    label: "Newsletter",
+    icon: Mail,
+    href: "/newsletter",
+  },
   { label: "Feed", icon: List, href: "/feed" },
   { 
     label: "Articoli", 
@@ -114,11 +119,6 @@ const primaryNav: NavLink[] = [
     href: "/video",
     color: "bg-purple-500/20 border-purple-500/50 text-white",
     colorLight: "bg-purple-100 border-purple-500 text-purple-900"
-  },
-  {
-    label: "Newsletter",
-    icon: Mail,
-    href: "/newsletter",
   },
   { label: "Archivio", icon: Archive, href: "/archivio" },
   { label: "Contenuti Extra", icon: Star, href: "/extra", locked: true },

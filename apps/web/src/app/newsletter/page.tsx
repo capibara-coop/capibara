@@ -20,6 +20,9 @@ export default async function NewsletterPage({
     ? columns.find(c => c.slug === selectedColumnSlug)
     : null;
 
+  const selectedAuthorData = selectedColumn?.author as any;
+  const selectedAuthor = selectedAuthorData?.data?.attributes || selectedAuthorData?.attributes || selectedAuthorData;
+
   return (
     <MainLayout>
       <div className="flex flex-col lg:flex-row gap-12 items-start relative w-full">
@@ -38,11 +41,11 @@ export default async function NewsletterPage({
 
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
-                  {selectedColumn.author?.data?.attributes?.avatar && (
+                  {selectedAuthor?.avatar && (
                     <div className="w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-2 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
                       <img 
-                        src={extractHeroImage(selectedColumn.author.data.attributes.avatar).url ?? ""} 
-                        alt={selectedColumn.author.data.attributes.name} 
+                        src={extractHeroImage(selectedAuthor.avatar).url ?? ""} 
+                        alt={selectedAuthor.name} 
                         className="w-full h-full object-contain translate-y-2 scale-110"
                       />
                     </div>
@@ -50,7 +53,7 @@ export default async function NewsletterPage({
                   <div>
                     <h1 className="text-4xl font-bold tracking-tight">{selectedColumn.title}</h1>
                     <p className="text-lg text-zinc-500 mt-2">
-                      Rubrica curata da <span className="font-semibold text-zinc-900 dark:text-zinc-100">{selectedColumn.author?.data?.attributes?.name || "Redazione"}</span>
+                      Rubrica curata da <span className="font-semibold text-zinc-900 dark:text-zinc-100">{selectedAuthor?.name || "Redazione"}</span>
                     </p>
                   </div>
                 </div>
