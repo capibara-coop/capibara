@@ -240,7 +240,16 @@ type DailyLink = {
 
 type Column = {
   title: string;
+  slug: string;
   description?: string | null;
+  cover?: {
+    data: {
+      attributes: {
+        url: string;
+        alternativeText?: string | null;
+      };
+    };
+  } | null;
   author?: {
     data: {
       attributes: Author;
@@ -651,6 +660,7 @@ export async function getColumns() {
         "populate[0]": "author",
         "populate[1]": "author.avatar",
         "populate[2]": "links",
+        "populate[3]": "cover",
         "publicationState": "live",
         "sort[0]": "createdAt:desc",
       },
