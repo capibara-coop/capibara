@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_shared_seos",
+  "info": {
+    "displayName": "SEO",
+    "icon": "search",
+    "description": "Componente SEO per ottimizzazione motori di ricerca"
+  },
+  "options": {},
+  "attributes": {
+    "metaTitle": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "metaDescription": {
+      "type": "text",
+      "maxLength": 160
+    },
+    "keywords": {
+      "type": "string"
+    },
+    "metaImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "preventIndexing": {
+      "type": "boolean",
+      "default": false
+    },
+    "structuredData": {
+      "type": "json"
+    }
+  }
+}
+
