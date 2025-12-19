@@ -32,6 +32,9 @@ export default {
     strapi.log.info('   Settings > Users & Permissions > Roles > Public');
     strapi.log.info('   Enable "find" and "findOne" for: Show, Video Episode, Podcast Episode, Newsletter Issue, Tag, Partner, Author, Daily Link (including "image"), Column');
 
+    // SEO component (shared.seo) is created automatically by @strapi-community/plugin-seo
+    // It will be available after the plugin is initialized
+
     // Test content generation
     try {
       // Check if we already have authors
