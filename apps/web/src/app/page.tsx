@@ -243,6 +243,7 @@ export default async function Home() {
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {validArticles.map((article) => {
                   const { url, alt } = extractHeroImage(article.heroImage);
+                  const authorName = article.author?.data?.attributes?.name ?? null;
 
                   return (
                     <ContentCard
@@ -259,6 +260,7 @@ export default async function Home() {
                         slug: article.slug,
                         type: "article",
                         borderColor: "indigo-500",
+                        authorName: authorName,
                       }}
                     />
                   );

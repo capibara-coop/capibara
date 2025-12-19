@@ -31,6 +31,22 @@ export default async function ArticoliPage({
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => {
                 const { url, alt } = extractHeroImage(article.heroImage);
+                // Estrai il nome dell'autore da diverse possibili strutture
+                const authorName = 
+                  article.author?.data?.attributes?.name ||
+                  (article.author as any)?.attributes?.name ||
+                  (article.author as any)?.name ||
+                  null;
+
+                // Debug in development
+                if (process.env.NODE_ENV === 'development' && !authorName && article.author) {
+                  console.log('Article author structure:', {
+                    slug: article.slug,
+                    author: article.author,
+                    authorData: (article.author as any)?.data,
+                    authorAttributes: (article.author as any)?.data?.attributes,
+                  });
+                }
 
                 return (
                   <ContentCard
@@ -47,6 +63,7 @@ export default async function ArticoliPage({
                       slug: article.slug,
                       type: "article",
                       borderColor: "indigo-500",
+                      authorName: authorName,
                     }}
                   />
                 );

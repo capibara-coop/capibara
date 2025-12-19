@@ -56,7 +56,7 @@ export default async function NewsletterPage({
                   )}
                   <div>
                     <h1 className="text-4xl font-bold tracking-tight">{selectedColumn.title}</h1>
-                    <p className="text-lg text-zinc-500 mt-2">
+                    <p className="text-lg text-zinc-600 dark:text-zinc-400 mt-2">
                       Rubrica curata da <span className="font-semibold text-zinc-900 dark:text-zinc-100">{selectedAuthor?.name || "Redazione"}</span>
                     </p>
                     {(selectedAuthor?.instagram ||
@@ -342,7 +342,9 @@ export default async function NewsletterPage({
                         )}
                         <div className="min-w-0">
                           <h3 className="font-bold text-sm leading-tight truncate">{column.title}</h3>
-                          <p className="text-[10px] text-zinc-700 dark:text-zinc-400 mt-0.5 truncate">curata da {author?.name || "Redazione"}</p>
+                          <p className="text-[10px] text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">
+                            curata da <span className="text-zinc-900 dark:text-zinc-300">{author?.name || "Redazione"}</span>
+                          </p>
                         </div>
                       </div>
                       

@@ -261,15 +261,23 @@ export default function MainLayout({
   const pathname = usePathname();
   const { data: session } = useSession();
   
-  // Leggi il tema dal localStorage all'inizializzazione, con fallback a "dark"
-  const [theme, setTheme] = React.useState<"dark" | "light">(() => {
-    // Solo lato client (localStorage non esiste durante SSR)
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("capibara-theme") as "dark" | "light" | null;
-      return savedTheme || "dark";
+  // Tema: usa sempre "dark" come valore iniziale sia su server che su client
+  // per evitare mismatch di idratazione; poi sincronizza con localStorage dopo il mount.
+  const [theme, setTheme] = React.useState<"dark" | "light">("dark");
+
+  // Al mount, leggi il tema salvato (se presente) e applicalo
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedTheme = localStorage.getItem("capibara-theme") as
+      | "dark"
+      | "light"
+      | null;
+    if (savedTheme && savedTheme !== theme) {
+      setTheme(savedTheme);
     }
-    return "dark";
-  });
+  // esegui solo al mount; eslint può essere ignorato se segnala theme nelle deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Salva il tema nel localStorage e applica all'elemento html quando cambia
   React.useEffect(() => {
