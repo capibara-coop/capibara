@@ -1,5 +1,6 @@
 import MainLayout from "@/components/MainLayout";
 import Image from "next/image";
+import { extractHeroImage, getAuthors, type Author } from "@/lib/api";
 
 // Social Media Icons
 const InstagramIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -35,30 +36,66 @@ const LinkedInIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-interface RedazioneMember {
-  name: string;
-  avatar: string;
-  redazione: string;
+function AuthorSocialLinks({ author }: { author: Author }) {
+  const { instagram, tiktok, linkedin, website } = author;
+  const hasAny =
+    !!instagram || !!tiktok || !!linkedin || !!website;
+
+  if (!hasAny) return null;
+
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      {instagram && (
+        <a
+          href={instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          aria-label="Instagram"
+        >
+          <InstagramIcon className="w-5 h-5" />
+        </a>
+      )}
+      {tiktok && (
+        <a
+          href={tiktok}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          aria-label="TikTok"
+        >
+          <TikTokIcon className="w-5 h-5" />
+        </a>
+      )}
+      {linkedin && (
+        <a
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          aria-label="LinkedIn"
+        >
+          <LinkedInIcon className="w-5 h-5" />
+        </a>
+      )}
+      {website && (
+        <a
+          href={website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100 underline decoration-dotted underline-offset-4"
+          aria-label="Sito personale"
+        >
+          Sito
+        </a>
+      )}
+    </div>
+  );
 }
 
-const membri: RedazioneMember[] = [
-  { name: "Marco Rossi", avatar: "/avatar/peep-14.png", redazione: "Redazione Milano" },
-  { name: "Sofia Bianchi", avatar: "/avatar/peep-20.png", redazione: "Redazione Roma" },
-  { name: "Luca Verdi", avatar: "/avatar/peep-32.png", redazione: "Redazione Napoli" },
-  { name: "Giulia Neri", avatar: "/avatar/peep-38.png", redazione: "Redazione Torino" },
-  { name: "Alessandro Marrone", avatar: "/avatar/peep-45.png", redazione: "Redazione Milano" },
-  { name: "Chiara Blu", avatar: "/avatar/peep-49.png", redazione: "Redazione Bologna" },
-  { name: "Francesco Gialli", avatar: "/avatar/peep-51.png", redazione: "Redazione Firenze" },
-  { name: "Elena Rosa", avatar: "/avatar/peep-55.png", redazione: "Redazione Roma" },
-  { name: "Matteo Viola", avatar: "/avatar/peep-56.png", redazione: "Redazione Palermo" },
-  { name: "Valentina Azzurra", avatar: "/avatar/peep-57.png", redazione: "Redazione Genova" },
-  { name: "Davide Arancione", avatar: "/avatar/peep-74.png", redazione: "Redazione Milano" },
-  { name: "Martina Celeste", avatar: "/avatar/peep-76.png", redazione: "Redazione Venezia" },
-  { name: "Riccardo Indaco", avatar: "/avatar/peep-83.png", redazione: "Redazione Bari" },
-  { name: "Alessia Turchese", avatar: "/avatar/peep-99.png", redazione: "Redazione Roma" },
-];
+export default async function RedazionePage() {
+  const authors = await getAuthors();
 
-export default function RedazionePage() {
   return (
     <MainLayout>
       <div className="space-y-12">
@@ -72,57 +109,75 @@ export default function RedazionePage() {
             unite e uniti dalla passione per un&apos;informazione indipendente
             e di parte.
           </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl">
+            Questa pagina si aggiorna automaticamente in base agli autori
+            configurati in Strapi. Aggiungi o modifica un autore nel CMS per
+            aggiornare la redazione.
+          </p>
         </section>
 
-        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {membri.map((membro, index) => (
-            <div
-              key={index}
-              className="content-box p-6 space-y-4 flex flex-col items-center text-center"
-            >
-              <div className="relative w-24 h-24 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                <Image
-                  src={membro.avatar}
-                  alt={membro.name}
-                  width={96}
-                  height={96}
-                  className="object-contain w-full h-full p-2"
-                />
-              </div>
-              <div className="space-y-1">
-                <h3 className="page-heading text-lg font-semibold">
-                  {membro.name}
-                </h3>
-                <p className="body-text-sm text-zinc-600 dark:text-zinc-400">
-                  {membro.redazione}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 pt-2">
-                <a
-                  href="#"
-                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                  aria-label="Instagram"
+        {authors.length === 0 ? (
+          <section className="content-box p-8 text-center">
+            <p className="body-text">
+              Nessun autore configurato al momento. Aggiungi autori nel CMS per
+              popolare automaticamente questa pagina.
+            </p>
+          </section>
+        ) : (
+          <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {authors.map((author, index) => {
+              const { url: avatarUrl, alt: avatarAlt } = extractHeroImage(
+                author.avatar,
+              );
+
+              return (
+                <div
+                  key={index}
+                  className="content-box p-6 space-y-4 flex flex-col items-center text-center"
                 >
-                  <InstagramIcon className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                  aria-label="TikTok"
-                >
-                  <TikTokIcon className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                  aria-label="LinkedIn"
-                >
-                  <LinkedInIcon className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-          ))}
-        </section>
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                    {avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt={avatarAlt || author.name}
+                        width={96}
+                        height={96}
+                        className="object-contain w-full h-full p-2"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xl font-semibold">
+                        {author.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="page-heading text-lg font-semibold">
+                      {author.name}
+                    </h3>
+                    {author.location && (
+                      <p className="body-text-sm text-zinc-600 dark:text-zinc-400">
+                        {author.location}
+                      </p>
+                    )}
+                    {author.bio && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-3">
+                        {author.bio}
+                      </p>
+                    )}
+                    {author.columns?.data?.length ? (
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pt-1">
+                        {author.columns.data.length === 1
+                          ? "Cura 1 rubrica"
+                          : `Cura ${author.columns.data.length} rubriche`}
+                      </p>
+                    ) : null}
+                  </div>
+                  <AuthorSocialLinks author={author} />
+                </div>
+              );
+            })}
+          </section>
+        )}
       </div>
     </MainLayout>
   );

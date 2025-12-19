@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getArticleBySlug, getStrapiMediaUrl } from "@/lib/api";
+import { getArticleBySlug, getStrapiMediaUrl, type Author } from "@/lib/api";
 import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { Clock } from "lucide-react";
+import { Clock, Instagram, Linkedin, Globe, Music2 } from "lucide-react";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -28,11 +28,14 @@ export async function generateMetadata({
 
   const description = article.excerpt || article.body?.substring(0, 160) || "Leggi l'articolo completo su Capibara";
 
+  const author: Author | undefined =
+    article.author?.data?.attributes || undefined;
+
   return {
     title: article.title,
     description,
     keywords: article.tags?.data?.map((tag) => tag.attributes.name) || [],
-    authors: article.author ? [{ name: article.author }] : undefined,
+    authors: author ? [{ name: author.name }] : undefined,
     openGraph: {
       type: "article",
       locale: "it_IT",
@@ -80,6 +83,9 @@ export default async function ArticlePage({
     ? getStrapiMediaUrl(article.heroImage.data.attributes.url) || `${siteUrl}${article.heroImage.data.attributes.url}`
     : `${siteUrl}/logo_capibara.png`;
 
+  const author: Author | undefined =
+    article.author?.data?.attributes || undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -87,10 +93,10 @@ export default async function ArticlePage({
     description: article.excerpt || article.body?.substring(0, 160) || "",
     image: imageUrl,
     datePublished: article.publishDate || undefined,
-    author: article.author
+    author: author
       ? {
           "@type": "Person",
-          name: article.author,
+          name: author.name,
         }
       : {
           "@type": "Organization",
@@ -154,10 +160,65 @@ export default async function ArticlePage({
                   {article.readingTime} min di lettura
                 </span>
               )}
-              {article.author && (
-                <span>di {article.author}</span>
+              {author && (
+                <span>di {author.name}</span>
               )}
             </div>
+            {author && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+                {author.bio && (
+                  <p className="max-w-xl text-xs text-zinc-500 dark:text-zinc-400">
+                    {author.bio}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 ml-auto">
+                  {author.instagram && (
+                    <a
+                      href={author.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.tiktok && (
+                    <a
+                      href={author.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="TikTok"
+                    >
+                      <Music2 className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.linkedin && (
+                    <a
+                      href={author.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="LinkedIn"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.website && (
+                    <a
+                      href={author.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="Sito personale"
+                    >
+                      <Globe className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {article.excerpt && (
