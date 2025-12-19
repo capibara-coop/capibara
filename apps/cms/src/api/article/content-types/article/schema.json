@@ -52,7 +52,10 @@
       "description": "Tempo di lettura stimato in minuti"
     },
     "author": {
-      "type": "string"
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::author.author",
+      "inversedBy": "articles"
     },
     "tags": {
       "type": "relation",

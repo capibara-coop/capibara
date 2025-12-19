@@ -23,6 +23,21 @@
     "bio": {
       "type": "text"
     },
+    "location": {
+      "type": "string"
+    },
+    "instagram": {
+      "type": "string"
+    },
+    "tiktok": {
+      "type": "string"
+    },
+    "linkedin": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
     "columns": {
       "type": "relation",
       "relation": "oneToMany",

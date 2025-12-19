@@ -1,8 +1,9 @@
-import { getNewsletterIssues, extractHeroImage, getDailyLinks, getColumns } from "@/lib/api";
+import { getNewsletterIssues, extractHeroImage, getDailyLinks, getColumns, type Author } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
+import { Instagram, Music2, Linkedin, Globe } from "lucide-react";
 
 export default async function NewsletterPage({
   searchParams,
@@ -21,7 +22,10 @@ export default async function NewsletterPage({
     : null;
 
   const selectedAuthorData = selectedColumn?.author as any;
-  const selectedAuthor = selectedAuthorData?.data?.attributes || selectedAuthorData?.attributes || selectedAuthorData;
+  const selectedAuthor: Author | undefined =
+    selectedAuthorData?.data?.attributes ||
+    selectedAuthorData?.attributes ||
+    selectedAuthorData;
 
   return (
     <MainLayout>
@@ -55,6 +59,57 @@ export default async function NewsletterPage({
                     <p className="text-lg text-zinc-500 mt-2">
                       Rubrica curata da <span className="font-semibold text-zinc-900 dark:text-zinc-100">{selectedAuthor?.name || "Redazione"}</span>
                     </p>
+                    {(selectedAuthor?.instagram ||
+                      selectedAuthor?.tiktok ||
+                      selectedAuthor?.linkedin ||
+                      selectedAuthor?.website) && (
+                      <div className="flex items-center gap-3 mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                        {selectedAuthor.instagram && (
+                          <a
+                            href={selectedAuthor.instagram}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            aria-label="Instagram"
+                          >
+                            <Instagram className="h-4 w-4" />
+                          </a>
+                        )}
+                        {selectedAuthor.tiktok && (
+                          <a
+                            href={selectedAuthor.tiktok}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            aria-label="TikTok"
+                          >
+                            <Music2 className="h-4 w-4" />
+                          </a>
+                        )}
+                        {selectedAuthor.linkedin && (
+                          <a
+                            href={selectedAuthor.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            aria-label="LinkedIn"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </a>
+                        )}
+                        {selectedAuthor.website && (
+                          <a
+                            href={selectedAuthor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            aria-label="Sito personale"
+                          >
+                            <Globe className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

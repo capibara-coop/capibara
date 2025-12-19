@@ -213,6 +213,19 @@ type NewsletterIssue = EpisodeBase & {
 type Author = {
   name: string;
   bio?: string | null;
+  location?: string | null;
+  instagram?: string | null;
+  tiktok?: string | null;
+  linkedin?: string | null;
+  website?: string | null;
+  columns?: {
+    data: Array<{
+      attributes: {
+        title: string;
+        slug: string;
+      };
+    }>;
+  } | null;
   avatar?: {
     data: {
       attributes: {
@@ -270,7 +283,11 @@ type Article = {
   publishDate?: string | null;
   isPremium?: boolean;
   readingTime?: number | null;
-  author?: string | null;
+  author?: {
+    data: {
+      attributes: Author;
+    } | null;
+  } | null;
   heroImage?: {
     data: {
       attributes: {
@@ -813,4 +830,25 @@ export type {
   StrapiCollectionResponse,
   PaginationMeta,
 };
+
+// Authors
+export async function getAuthors() {
+  const response = await strapiFetch<StrapiCollectionResponse<Author>>(
+    "/api/authors",
+    {
+      query: {
+        "populate[0]": "avatar",
+        "populate[1]": "columns",
+        "publicationState": "live",
+        "sort[0]": "name:asc",
+      },
+      revalidate: 300,
+    },
+  );
+
+  return (response.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as Author[];
+}
 
