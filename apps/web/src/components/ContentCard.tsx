@@ -15,6 +15,7 @@ type ContentTile = {
   imageUrl?: string | null;
   imageAlt?: string | null;
   borderColor?: string; // Colore bordo opzionale (es: "border-indigo-500/50")
+  authorName?: string | null; // Nome dell'autore (opzionale)
 };
 
 const kindAccent: Record<Show["kind"], string> = {
@@ -93,6 +94,11 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
           )}
         </div>
         <h3 className="content-card-title">{entry.title}</h3>
+        {entry.authorName && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            di {entry.authorName}
+          </p>
+        )}
         <p className="content-card-summary">{entry.summary}</p>
       </div>
       <div className="content-card-date">

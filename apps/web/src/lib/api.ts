@@ -468,7 +468,9 @@ export async function getLatestArticles(limit = 6) {
     "/api/articles",
     {
       query: {
-        populate: "*",
+        "populate[0]": "author",
+        "populate[1]": "heroImage",
+        "populate[2]": "tags",
         "publicationState": "live",
         "pagination[pageSize]": limit,
         "sort[0]": "publishDate:desc",
@@ -490,7 +492,9 @@ export async function getArticles(page = 1, pageSize = 12) {
     "/api/articles",
     {
       query: {
-        populate: "*",
+        "populate[0]": "author",
+        "populate[1]": "heroImage",
+        "populate[2]": "tags",
         "publicationState": "live",
         "pagination[page]": page,
         "pagination[pageSize]": pageSize,
@@ -523,7 +527,9 @@ export async function getArticleBySlug(slug: string) {
     "/api/articles",
     {
       query: {
-        populate: "*",
+        "populate[0]": "author",
+        "populate[1]": "heroImage",
+        "populate[2]": "tags",
         "publicationState": "live",
         "filters[slug][$eq]": slug,
       },
