@@ -498,9 +498,9 @@ export default function MainLayout({
               : "border-b border-zinc-200 bg-white/70 backdrop-blur"
           }`}
         >
-          <div className="flex items-center justify-between">
-            {/* Logo e bottone hamburger per mobile */}
-            <div className="flex items-center gap-3 lg:hidden">
+          <div className="flex items-center justify-between w-full lg:justify-end">
+            {/* Logo e bottone hamburger per mobile - solo su mobile */}
+            <div className="flex items-center gap-3 lg:hidden flex-shrink-0">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`flex items-center justify-center w-10 h-10 rounded-xl transition ${
@@ -532,6 +532,7 @@ export default function MainLayout({
                 </span>
               </Link>
             </div>
+            {/* Social e Dark Mode - sempre a destra */}
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-3">
                 <a
