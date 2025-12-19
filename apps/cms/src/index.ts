@@ -32,12 +32,17 @@ async function configureSEOPermissions(strapi: Core.Strapi) {
       const role = roles[0];
       strapi.log.info(`🔧 Configuring SEO permissions for role: ${role.name}`);
 
-      // Ottieni i permessi esistenti del ruolo
-      const existingPermissions = await strapi.documents('admin::permission').findMany({
-        filters: {
-          role: role.id,
-        },
+      // Ottieni tutti i permessi e filtra per ruolo (workaround per il filtro relazione)
+      const allPermissions = await strapi.documents('admin::permission').findMany({
         populate: ['role'],
+      });
+      
+      // Filtra manualmente per ruolo
+      const existingPermissions = allPermissions.filter((p) => {
+        if (!p.role) return false;
+        const roleId = typeof p.role === 'object' && 'id' in p.role ? p.role.id : null;
+        if (!roleId) return false;
+        return String(roleId) === String(role.id);
       });
 
       // Per ogni content type con SEO
@@ -55,8 +60,15 @@ async function configureSEOPermissions(strapi: Core.Strapi) {
           if (permission) {
             // Aggiorna il permesso esistente per includere esplicitamente tutti i campi
             // In Strapi 5, se fields è vuoto o mancante, potrebbe essere interpretato come "nessun campo"
-            const properties = permission.properties || {};
-            const fields = properties.fields;
+            const properties = permission.properties;
+            let propertiesObj: Record<string, any> = {};
+            
+            // Converti properties a oggetto se è JSONObject
+            if (properties && typeof properties === 'object' && !Array.isArray(properties)) {
+              propertiesObj = properties as Record<string, any>;
+            }
+            
+            const fields = propertiesObj.fields;
 
             // Se fields è già ["*"], non serve modificare
             if (Array.isArray(fields) && fields.includes('*')) {
@@ -65,11 +77,13 @@ async function configureSEOPermissions(strapi: Core.Strapi) {
 
             // Imposta fields a ["*"] per dare accesso a tutti i campi, inclusi i componenti come SEO
             // Questo risolve il problema "no permission to see this field" per i componenti
+            const documentId = typeof permission.id === 'string' ? permission.id : String(permission.id);
+            
             await strapi.documents('admin::permission').update({
-              documentId: permission.id,
+              documentId,
               data: {
                 properties: {
-                  ...properties,
+                  ...propertiesObj,
                   fields: ['*'],
                 },
               },
