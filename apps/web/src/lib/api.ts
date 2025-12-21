@@ -157,7 +157,7 @@ async function strapiFetch<T>(
 type Show = {
   title: string;
   slug: string;
-  kind: "video" | "podcast" | "newsletter";
+  kind: "video" | "podcast" | "newsroom";
   tagline?: string | null;
   description?: string | null;
   accentColor?: string | null;
