@@ -107,7 +107,7 @@ export default async function FeedPage() {
                           ? "Podcast"
                           : item.contentType === "article"
                             ? "Articolo"
-                            : "Newsletter",
+                            : "Newsroom",
                     accent:
                       item.contentType === "article"
                         ? "from-blue-500/30 via-indigo-500/20 to-purple-900/40"
@@ -123,7 +123,7 @@ export default async function FeedPage() {
                     })(),
                     locked: item.isPremium ?? false,
                     slug: item.slug,
-                    type: item.contentType,
+                    type: item.contentType === "newsletter" ? "newsroom" : item.contentType,
                     borderColor: getBorderColor(),
                   }}
                 />

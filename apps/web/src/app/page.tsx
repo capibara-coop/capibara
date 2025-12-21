@@ -258,13 +258,13 @@ export default async function Home() {
                       title: letter.title ?? "Untitled",
                       date: formatDate(letter.publishDate),
                       summary: letter.excerpt ?? letter.summary ?? "",
-                      tag: "Newsletter",
-                      accent: getKindAccent("newsletter"),
+                      tag: "Newsroom",
+                      accent: getKindAccent("newsroom"),
                       imageUrl: url ?? undefined,
                       imageAlt: alt ?? letter.title,
                       locked: letter.isPremium ?? true,
                       slug: letter.slug,
-                      type: "newsletter",
+                      type: "newsroom",
                     }}
                   />
                 );
