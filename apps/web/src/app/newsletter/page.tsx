@@ -132,7 +132,9 @@ export default async function NewsletterPage({
                 )}
 
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {selectedColumn.links.map((link, j) => (
+                  {selectedColumn.links
+                    .filter(link => !link.publishDate || new Date(link.publishDate) <= new Date())
+                    .map((link, j) => (
                     <div key={j} className="content-box p-6 space-y-4 hover:border-zinc-900 transition-colors group h-full flex flex-col">
                       <div className="flex-1 space-y-2">
                         <h3 className="font-bold text-xl leading-tight group-hover:underline decoration-2 underline-offset-4">
