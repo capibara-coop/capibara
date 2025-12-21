@@ -7,7 +7,7 @@ type ContentListItemData = {
   tag: string;
   locked?: boolean;
   slug?: string;
-  type?: "video" | "podcast" | "newsletter" | "article";
+  type?: "video" | "podcast" | "newsroom" | "article";
 };
 
 export default function ContentListItem({
