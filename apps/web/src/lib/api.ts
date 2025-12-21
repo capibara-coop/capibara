@@ -273,6 +273,7 @@ type Column = {
     label: string;
     url: string;
     description?: string | null;
+    publishDate?: string | null;
   }>;
 };
 
@@ -706,6 +707,7 @@ export async function getColumns() {
         "publicationState": "live",
         "sort[0]": "createdAt:desc",
       },
+      // Note: links.publishDate is automatically populated since links is a component
       revalidate: 60,
     }
   );

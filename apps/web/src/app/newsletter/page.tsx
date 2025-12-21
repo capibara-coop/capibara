@@ -40,7 +40,7 @@ export default async function NewsletterPage({
                 className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors group"
               >
                 <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                Torna a tutte le news
+                Torna alla Newsroom
               </Link>
 
               <div className="space-y-6">
@@ -162,14 +162,14 @@ export default async function NewsletterPage({
             <>
               {/* Header */}
               <div>
-                <h1 className="page-title text-4xl font-semibold">Newsletter</h1>
+                <h1 className="page-title text-4xl font-semibold">Newsroom</h1>
                 <p className="body-text mt-2">
                   Link curati, approfondimenti giornalieri e le nostre edizioni premium.
                 </p>
               </div>
 
-              {/* Link del Giorno */}
-              {dailyLinks.length > 0 && (
+              {/* Link del Giorno o Dalle Rubriche */}
+              {dailyLinks.length > 0 ? (
                 <section className="space-y-6">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-8 bg-zinc-900" />
@@ -178,14 +178,14 @@ export default async function NewsletterPage({
                   <div className="grid gap-4 md:grid-cols-2">
                     {dailyLinks.map((link, i) => {
                       const { url: imageUrl, alt: imageAlt } = extractHeroImage(link.image);
-                      
+
                       return (
                         <div key={i} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col sm:flex-row">
                           {imageUrl && (
                             <div className="w-full sm:w-32 h-32 shrink-0">
-                              <img 
-                                src={imageUrl} 
-                                alt={imageAlt || link.title} 
+                              <img
+                                src={imageUrl}
+                                alt={imageAlt || link.title}
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -201,6 +201,58 @@ export default async function NewsletterPage({
                     })}
                   </div>
                 </section>
+              ) : (
+                <section className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-8 bg-zinc-900" />
+                    <h2 className="text-2xl font-bold uppercase tracking-tight">Dalle Rubriche</h2>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {columns
+                      .flatMap(column => column.links.map(link => ({ ...link, column, author: column.author })))
+                      .filter(link => !link.publishDate || new Date(link.publishDate) <= new Date())
+                      .sort(() => Math.random() - 0.5)
+                      .slice(0, 4)
+                      .map((item, i) => {
+                        const authorData = item.author as any;
+                        const author = authorData?.data?.attributes || authorData?.attributes || authorData;
+
+                        return (
+                          <div key={i} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col">
+                            <div className="p-5 flex-1 min-w-0">
+                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2">
+                                {item.label}
+                              </a>
+                              {item.description && <p className="text-sm text-zinc-600 mt-2 leading-relaxed line-clamp-3">{item.description}</p>}
+                              <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                  {author?.avatar && (
+                                    <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
+                                      <img
+                                        src={extractHeroImage(author.avatar).url ?? ""}
+                                        alt={author.name}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                      Da <span className="font-medium text-zinc-900 dark:text-zinc-100">{item.column.title}</span>
+                                    </p>
+                                    {author?.name && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                                        {author.name}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </section>
               )}
 
               {/* Archivio Premium */}
@@ -212,15 +264,15 @@ export default async function NewsletterPage({
 
                 {issues.length === 0 ? (
                   <div className="content-box p-12 text-center">
-                    <p className="body-text">Nessuna newsletter disponibile al momento.</p>
+                    <p className="body-text">Nessuna newsroom disponibile al momento.</p>
                   </div>
                 ) : (
                   <>
                     <div className="grid gap-6 md:grid-cols-2">
                       {issues.map((issue) => {
                         const showData = issue.show?.data;
-                        const showKind = 
-                          (showData?.attributes?.kind as Show["kind"]) ?? "newsletter";
+                        const showKind =
+                          (showData?.attributes?.kind as Show["kind"]) ?? "newsroom";
                         const accent = getKindAccent(showKind);
 
                         const { url, alt } = extractHeroImage(issue.heroImage);
@@ -232,13 +284,13 @@ export default async function NewsletterPage({
                               title: issue.title ?? "Untitled",
                               date: formatDate(issue.publishDate),
                               summary: issue.excerpt ?? issue.summary ?? "",
-                              tag: "Newsletter",
+                              tag: "Newsroom",
                               accent,
                               imageUrl: url ?? undefined,
                               imageAlt: alt ?? issue.title,
                               locked: issue.isPremium ?? true,
                               slug: issue.slug,
-                              type: "newsletter",
+                              type: "newsroom",
                             }}
                           />
                         );
@@ -301,7 +353,7 @@ export default async function NewsletterPage({
                       href="/newsletter"
                       className="text-[10px] font-bold uppercase tracking-wider text-amber-600 hover:text-amber-700 block pt-2"
                     >
-                      Torna a tutte le news <span>→</span>
+                      Torna alla Newsroom <span>→</span>
                     </Link>
                   </div>
                 </div>
@@ -342,9 +394,17 @@ export default async function NewsletterPage({
                         )}
                         <div className="min-w-0">
                           <h3 className="font-bold text-sm leading-tight truncate">{column.title}</h3>
-                          <p className="text-[10px] text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">
-                            curata da <span className="text-zinc-900 dark:text-zinc-300">{author?.name || "Redazione"}</span>
-                          </p>
+                          <div className="mt-0.5">
+                            {author?.name ? (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                                {author.name}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
+                                Redazione
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
