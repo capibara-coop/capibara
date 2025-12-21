@@ -11,7 +11,7 @@ type ContentTile = {
   accent: string;
   locked?: boolean;
   slug?: string;
-  type?: "video" | "podcast" | "newsletter" | "article";
+  type?: "video" | "podcast" | "newsroom" | "article";
   imageUrl?: string | null;
   imageAlt?: string | null;
   borderColor?: string; // Colore bordo opzionale (es: "border-indigo-500/50")
@@ -21,7 +21,7 @@ type ContentTile = {
 const kindAccent: Record<Show["kind"], string> = {
   video: "from-purple-500/30 via-fuchsia-500/20 to-amber-400/30",
   podcast: "from-teal-500/30 via-sky-500/20 to-blue-900/40",
-  newsletter: "from-yellow-500/20 via-orange-600/20 to-red-700/30",
+  newsroom: "from-yellow-500/20 via-orange-600/20 to-red-700/30",
 };
 
 export const formatDate = (iso?: string | null) => {

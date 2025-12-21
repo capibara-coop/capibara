@@ -96,7 +96,7 @@ const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
 const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
   {
-    label: "Newsletter",
+    label: "Newsroom",
     icon: Mail,
     href: "/newsletter",
   },
