@@ -99,6 +99,16 @@ export default async function ArticlePage({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
 
+  // Debug logging
+  console.log('Article data:', {
+    slug,
+    articleExists: !!article,
+    title: article?.title,
+    body: article?.body,
+    bodyLength: article?.body?.length,
+    bodyType: typeof article?.body
+  });
+
   if (!article) {
     notFound();
   }
@@ -264,11 +274,22 @@ export default async function ArticlePage({
             </div>
           )}
 
-          {article.body && (
+          {article.body ? (
             <div
               className="article-prose"
               dangerouslySetInnerHTML={{ __html: markdownToHtml(article.body) }}
             />
+          ) : (
+            <div className="article-prose">
+              <p><em>Contenuto dell'articolo non disponibile.</em></p>
+              <p><strong>Debug info:</strong></p>
+              <ul>
+                <li>Title: {article.title}</li>
+                <li>Body type: {typeof article.body}</li>
+                <li>Body value: {JSON.stringify(article.body)}</li>
+                <li>Body length: {article.body?.length || 0}</li>
+              </ul>
+            </div>
           )}
 
           {article.tags?.data && article.tags.data.length > 0 && (
