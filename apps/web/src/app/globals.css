@@ -452,32 +452,50 @@ body {
 }
 
 /* Article body prose */
+.article-prose {
+  max-width: none !important;
+  line-height: 1.75 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+}
+
 [data-theme="dark"] .article-prose {
-  @apply max-w-none text-zinc-300;
+  color: #d4d4d8 !important; /* zinc-300 */
 }
 
 [data-theme="light"] .article-prose {
-  @apply max-w-none text-zinc-700;
+  color: #404040 !important; /* zinc-700 */
 }
 
 /* Prose styles for article content */
 .article-prose {
-  line-height: 1.75;
+  line-height: 1.75 !important;
   /* Reset Tailwind CSS reset for prose content */
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  color: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 /* Ensure all text elements inherit color */
-.article-prose,
 .article-prose * {
-  color: inherit;
+  color: inherit !important;
 }
 
 .article-prose p {
   margin-top: 1.25em !important;
   margin-bottom: 1.25em !important;
+  line-height: 1.75 !important;
+}
+
+/* Handle generic div elements that might be used in HTML content */
+.article-prose div {
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+  line-height: 1.75 !important;
+}
+
+/* Handle generic span elements */
+.article-prose span {
   line-height: 1.75 !important;
 }
 

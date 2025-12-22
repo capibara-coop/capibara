@@ -557,8 +557,24 @@ export async function getArticleBySlug(slug: string) {
     },
   );
 
+  console.log('API Response for slug:', slug, {
+    responseData: response.data,
+    dataLength: response.data?.length,
+    firstItem: response.data?.[0],
+    firstItemAttributes: response.data?.[0]?.attributes,
+  });
+
   const article = response.data?.[0];
-  return article?.attributes ?? article ?? null;
+  const result = article?.attributes ?? article ?? null;
+
+  console.log('Final article result:', {
+    result,
+    hasBody: !!result?.body,
+    bodyLength: result?.body?.length,
+    bodyPreview: result?.body ? result.body.substring(0, 100) : null
+  });
+
+  return result;
 }
 
 // Listing functions with pagination
