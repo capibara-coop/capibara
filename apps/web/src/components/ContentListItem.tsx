@@ -7,7 +7,7 @@ type ContentListItemData = {
   tag: string;
   locked?: boolean;
   slug?: string;
-  type?: "video" | "podcast" | "newsroom" | "article";
+  type?: "video" | "podcast" | "newsroom" | "article" | "column";
 };
 
 export default function ContentListItem({
@@ -18,6 +18,7 @@ export default function ContentListItem({
   const getHref = () => {
     if (!item.slug || !item.type) return "#";
     if (item.type === "article") return `/articoli/${item.slug}`;
+    if (item.type === "column") return `/newsletter?column=${item.slug}`;
     return `/${item.type}/${item.slug}`;
   };
 

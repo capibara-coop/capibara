@@ -95,9 +95,12 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
         </div>
         <h3 className="content-card-title">{entry.title}</h3>
         {entry.authorName && (
-          <p className="text-xs text-zinc-500 dark:text-zinc-300">
-            di {entry.authorName}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: 'black' }}>di</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+              {entry.authorName}
+            </span>
+          </div>
         )}
         <p className="content-card-summary">{entry.summary}</p>
       </div>

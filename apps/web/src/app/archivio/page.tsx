@@ -6,14 +6,16 @@ import {
   getLatestPodcastEpisodes,
   getPremiumNewsletterIssues,
   getLatestArticles,
+  getColumns,
 } from "@/lib/api";
 
 export default async function ArchivioPage() {
-  const [videos, podcasts, newsletters, articles] = await Promise.all([
+  const [videos, podcasts, newsletters, articles, columns] = await Promise.all([
     getLatestVideoEpisodes(6),
     getLatestPodcastEpisodes(6),
     getPremiumNewsletterIssues(6),
     getLatestArticles(6),
+    getColumns(),
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function ArchivioPage() {
           initialPodcasts={podcasts}
           initialNewsletters={newsletters}
           initialArticles={articles}
+          initialColumns={columns}
         />
       </Suspense>
     </MainLayout>

@@ -10,6 +10,7 @@ import type {
   PodcastEpisode,
   NewsletterIssue,
   Article,
+  Column,
 } from "@/lib/api";
 import { Search } from "lucide-react";
 
@@ -18,6 +19,7 @@ type SearchResults = {
   podcasts: PodcastEpisode[];
   newsletters: NewsletterIssue[];
   articles: Article[];
+  columns: Column[];
 } | null;
 
 type ArchivioContentProps = {
@@ -25,6 +27,7 @@ type ArchivioContentProps = {
   initialPodcasts: PodcastEpisode[];
   initialNewsletters: NewsletterIssue[];
   initialArticles: Article[];
+  initialColumns: Column[];
 };
 
 export function ArchivioContent({
@@ -32,6 +35,7 @@ export function ArchivioContent({
   initialPodcasts,
   initialNewsletters,
   initialArticles,
+  initialColumns,
 }: ArchivioContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,7 +97,7 @@ export function ArchivioContent({
     tag: string;
     locked: boolean;
     slug?: string;
-    type?: "video" | "podcast" | "newsroom" | "article";
+    type?: "video" | "podcast" | "newsroom" | "article" | "column";
   };
 
   const sortByDateDesc = (a: UnifiedItem, b: UnifiedItem) => {
@@ -147,6 +151,17 @@ export function ArchivioContent({
       slug: article.slug,
       type: "article" as const,
     })),
+    ...initialColumns.map((column) => ({
+      id: `column-${column.slug}`,
+      title: column.title ?? "Untitled",
+      isoDate: null, // Le rubriche non hanno una data specifica
+      date: "",
+      summary: column.description ?? "",
+      tag: "Rubrica",
+      locked: false,
+      slug: column.slug,
+      type: "column" as const,
+    })),
   ].sort(sortByDateDesc);
 
   const searchUnifiedList: UnifiedItem[] | null = results
@@ -194,6 +209,17 @@ export function ArchivioContent({
           locked: article.isPremium ?? false,
           slug: article.slug,
           type: "article" as const,
+        })),
+        ...results.columns.map((column) => ({
+          id: `column-${column.slug}`,
+          title: column.title ?? "Untitled",
+          isoDate: null, // Le rubriche non hanno una data specifica
+          date: "",
+          summary: column.description ?? "",
+          tag: "Rubrica",
+          locked: false,
+          slug: column.slug,
+          type: "column" as const,
         })),
       ].sort(sortByDateDesc)
     : null;

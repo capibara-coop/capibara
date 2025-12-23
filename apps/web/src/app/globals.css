@@ -487,6 +487,15 @@ body {
   color: rgb(244 244 245) !important; /* zinc-100 */
 }
 
+/* Force black text for newsletter rubrica titles in light mode, white in dark mode */
+.newsletter-rubrica-title {
+  color: #000000 !important; /* black in light mode */
+}
+
+[data-theme="dark"] .newsletter-rubrica-title {
+  color: #ffffff !important; /* white in dark mode */
+}
+
 /* Force black text for newsletter description text in light mode */
 .newsletter-description-text {
   color: rgb(24 24 27) !important; /* zinc-900 */
@@ -495,6 +504,8 @@ body {
 [data-theme="dark"] .newsletter-description-text {
   color: rgb(212 212 216) !important; /* zinc-300 */
 }
+
+
 
 /* Article body prose */
 .article-prose {
