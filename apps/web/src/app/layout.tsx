@@ -100,6 +100,12 @@ export default function RootLayout({
                 try {
                   const theme = localStorage.getItem('capibara-theme') || 'dark';
                   document.documentElement.setAttribute('data-theme', theme);
+                  // Aggiungi classe 'dark' per Tailwind dark: variant
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
                 } catch (e) {}
               })();
             `,

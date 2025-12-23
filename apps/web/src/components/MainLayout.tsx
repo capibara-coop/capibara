@@ -284,6 +284,12 @@ export default function MainLayout({
     if (typeof window !== "undefined") {
       localStorage.setItem("capibara-theme", theme);
       document.documentElement.setAttribute("data-theme", theme);
+      // Aggiungi/rimuovi classe 'dark' per Tailwind dark: variant
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
   }, [theme]);
 

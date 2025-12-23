@@ -6,6 +6,60 @@ import Link from "next/link";
 import { Instagram, Music2, Linkedin, Globe } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 
+// Component for displaying a single rubrica card
+function RubricaCard({ item, index }: { item: any; index: number }) {
+  const author = extractAuthorData(item.author);
+
+  return (
+    <div key={index} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col">
+      <div className="p-5 flex-1 min-w-0">
+        <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2">
+          {item.label}
+        </a>
+        {item.description && <p className="text-sm newsletter-card-description mt-2 leading-relaxed line-clamp-3">{item.description}</p>}
+        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            {author?.avatar && (
+              <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
+                <img
+                  src={extractHeroImage(author.avatar).url ?? ""}
+                  alt={author.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-xs text-zinc-500">
+                Da <span className="newsletter-rubrica-title font-medium" style={{ fontWeight: '600' }}>{item.column.title}</span>
+              </div>
+              {author?.name && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                  {author.name}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper function to extract author data from different possible structures
+function extractAuthorData(authorData: any): Author | undefined {
+  if (!authorData) return undefined;
+  return authorData?.data?.attributes || authorData?.attributes || authorData;
+}
+
+// Helper function to get random rubrica links for the "Dalle Rubriche" section
+function getRandomRubricaLinks(columns: any[], count: number = 4) {
+  return columns
+    .flatMap(column => column.links.map((link: any) => ({ ...link, column, author: column.author })))
+    .filter((link: any) => !link.publishDate || new Date(link.publishDate) <= new Date())
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+}
+
 export default async function NewsletterPage({
   searchParams,
 }: {
@@ -22,11 +76,7 @@ export default async function NewsletterPage({
     ? columns.find(c => c.slug === selectedColumnSlug)
     : null;
 
-  const selectedAuthorData = selectedColumn?.author as any;
-  const selectedAuthor: Author | undefined =
-    selectedAuthorData?.data?.attributes ||
-    selectedAuthorData?.attributes ||
-    selectedAuthorData;
+  const selectedAuthor = extractAuthorData(selectedColumn?.author);
 
   return (
     <MainLayout>
@@ -220,49 +270,10 @@ export default async function NewsletterPage({
                     <h2 className="text-2xl font-bold uppercase tracking-tight">Dalle Rubriche</h2>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    {columns
-                      .flatMap(column => column.links.map(link => ({ ...link, column, author: column.author })))
-                      .filter(link => !link.publishDate || new Date(link.publishDate) <= new Date())
-                      .sort(() => Math.random() - 0.5)
-                      .slice(0, 4)
-                      .map((item, i) => {
-                        const authorData = item.author as any;
-                        const author = authorData?.data?.attributes || authorData?.attributes || authorData;
-
-                        return (
-                          <div key={i} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col">
-                            <div className="p-5 flex-1 min-w-0">
-                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2">
-                                {item.label}
-                              </a>
-                              {item.description && <p className="text-sm newsletter-card-description mt-2 leading-relaxed line-clamp-3">{item.description}</p>}
-                              <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                                <div className="flex items-center gap-2">
-                                  {author?.avatar && (
-                                    <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
-                                      <img
-                                        src={extractHeroImage(author.avatar).url ?? ""}
-                                        alt={author.name}
-                                        className="w-full h-full object-contain"
-                                      />
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-300">
-                                      Da <span className="font-medium text-zinc-900 dark:text-zinc-100">{item.column.title}</span>
-                                    </p>
-                                    {author?.name && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
-                                        {author.name}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    {getRandomRubricaLinks(columns, 4)
+                      .map((item, i) => (
+                        <RubricaCard key={i} item={item} index={i} />
+                      ))}
                   </div>
                 </section>
               )}
@@ -337,7 +348,6 @@ export default async function NewsletterPage({
         <aside className="w-full lg:w-64 xl:w-72 shrink-0 lg:sticky lg:top-8">
           <div className="space-y-8">
             {selectedColumn && issues.length > 0 && (
-              /* Se rubrica selezionata, mostra l'ultima News in piccolo */
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-6 bg-amber-500" />
@@ -346,8 +356,8 @@ export default async function NewsletterPage({
                 <div className="content-box overflow-hidden group">
                   {issues[0].heroImage && (
                     <div className="aspect-video w-full overflow-hidden">
-                      <img 
-                        src={extractHeroImage(issues[0].heroImage).url ?? ""} 
+                      <img
+                        src={extractHeroImage(issues[0].heroImage).url ?? ""}
                         alt={issues[0].title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -355,7 +365,7 @@ export default async function NewsletterPage({
                   )}
                   <div className="p-4 space-y-2">
                     <h3 className="font-bold text-sm leading-tight line-clamp-2">{issues[0].title}</h3>
-                    <Link 
+                    <Link
                       href="/newsletter"
                       className="text-[10px] font-bold uppercase tracking-wider text-amber-600 hover:text-amber-700 block pt-2"
                     >
@@ -374,8 +384,7 @@ export default async function NewsletterPage({
               
               <div className="flex flex-col gap-4">
                 {columns.map((column, i) => {
-                  const authorData = column.author as any;
-                  const author = authorData?.data?.attributes || authorData?.attributes || authorData;
+                  const author = extractAuthorData(column.author);
                   const isSelected = selectedColumnSlug === column.slug;
 
                   return (
