@@ -197,6 +197,8 @@ type EpisodeBase = {
 type VideoEpisode = EpisodeBase & {
   videoUrl: string;
   durationSeconds?: number | null;
+  // "horizontal" (16:9) o "vertical" (9:16), gestito da Strapi
+  videoOrientation?: "horizontal" | "vertical" | null;
 };
 
 type PodcastEpisode = EpisodeBase & {
@@ -873,6 +875,72 @@ export type {
   StrapiCollectionResponse,
   PaginationMeta,
 };
+
+// Function to extract metadata from external URLs
+export async function extractExternalMetadata(url: string): Promise<{
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+}> {
+  try {
+    // For security, we'll use a simple approach that doesn't execute JavaScript
+    // In production, you might want to use a service like Microlink or similar
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CapibaraBot/1.0)',
+      },
+      // Timeout after 5 seconds
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const metadata: any = {};
+
+    // Extract title
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (titleMatch) {
+      metadata.title = titleMatch[1].trim();
+    }
+
+    // Extract meta tags
+    const metaRegex = /<meta[^>]+(?:name|property)=["']([^"']+)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
+    let metaMatch;
+
+    while ((metaMatch = metaRegex.exec(html)) !== null) {
+      const name = metaMatch[1].toLowerCase();
+      const content = metaMatch[2];
+
+      switch (name) {
+        case 'description':
+          metadata.description = content;
+          break;
+        case 'og:title':
+          metadata.title = content;
+          break;
+        case 'og:description':
+          metadata.description = content;
+          break;
+        case 'og:image':
+          metadata.image = content.startsWith('http') ? content : new URL(content, url).href;
+          break;
+        case 'og:site_name':
+          metadata.siteName = content;
+          break;
+      }
+    }
+
+    return metadata;
+  } catch (error) {
+    console.warn(`Failed to extract metadata from ${url}:`, error);
+    return {};
+  }
+}
 
 // Authors
 export async function getAuthors() {

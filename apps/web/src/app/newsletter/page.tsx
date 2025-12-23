@@ -1,43 +1,94 @@
-import { getNewsletterIssues, extractHeroImage, getDailyLinks, getColumns, type Author } from "@/lib/api";
+import { getNewsletterIssues, extractHeroImage, getDailyLinks, getColumns, extractExternalMetadata, type Author } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
 import { Instagram, Music2, Linkedin, Globe } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
+import RubricheFilters from "@/components/RubricheFilters";
 
 // Component for displaying a single rubrica card
-function RubricaCard({ item, index }: { item: any; index: number }) {
+function RubricaCard({ item, index, compact = false }: { item: any; index: number; compact?: boolean }) {
+  const externalMetadata = item.externalMetadata || {};
   const author = extractAuthorData(item.author);
+  const publishDate = item.publishDate ? new Date(item.publishDate) : null;
+
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return 'oggi';
+    if (diffDays === 2) return 'ieri';
+    if (diffDays <= 7) return `${diffDays - 1} giorni fa`;
+    if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} settimane fa`;
+
+    return date.toLocaleDateString('it-IT', {
+      day: 'numeric',
+      month: 'short',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  };
 
   return (
     <div key={index} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col">
-      <div className="p-5 flex-1 min-w-0">
-        <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2">
+      <div className={`${compact ? 'p-3' : 'p-5'} flex-1 min-w-0`}>
+        <a href={item.url} target="_blank" rel="noopener noreferrer" className={`font-semibold ${compact ? 'text-base' : 'text-lg'} hover:underline decoration-2 underline-offset-4 line-clamp-2`}>
           {item.label}
         </a>
-        {item.description && <p className="text-sm newsletter-card-description mt-2 leading-relaxed line-clamp-3">{item.description}</p>}
-        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            {author?.avatar && (
-              <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
-                <img
-                  src={extractHeroImage(author.avatar).url ?? ""}
-                  alt={author.name}
-                  className="w-full h-full object-contain"
-                />
+        {item.description && <p className={`text-sm newsletter-card-description ${compact ? 'mt-1 leading-relaxed line-clamp-2' : 'mt-2 leading-relaxed line-clamp-3'}`}>{item.description}</p>}
+
+        {/* External metadata preview */}
+        {externalMetadata.title && (
+          <div className={`mt-2 p-2 rounded-md bg-white dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700`}>
+            <div className="flex items-start gap-2">
+              <div className="w-1 h-1 rounded-full bg-zinc-400 mt-2 flex-shrink-0"></div>
+              <div className="min-w-0 flex-1">
+                {externalMetadata.siteName && (
+                  <div className="text-xs text-zinc-700 dark:text-zinc-400 mb-1">
+                    {externalMetadata.siteName}
+                  </div>
+                )}
+                <div className="text-xs font-medium text-zinc-900 dark:text-zinc-300 line-clamp-1">
+                  {externalMetadata.title}
+                </div>
+                {externalMetadata.description && (
+                  <div className="text-xs text-zinc-800 dark:text-zinc-400 mt-1 line-clamp-2">
+                    {externalMetadata.description}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        <div className={`${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} border-t border-zinc-100 dark:border-zinc-800`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {author?.avatar && (
+                <div className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0`}>
+                  <img
+                    src={extractHeroImage(author.avatar).url ?? ""}
+                    alt={author.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-zinc-500">
+                  Da <span className="newsletter-rubrica-title font-medium" style={{ fontWeight: '600' }}>{item.column.title}</span>
+                </div>
+                {author?.name && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 ${compact ? 'text-[10px]' : ''}`}>
+                    {author.name}
+                  </span>
+                )}
+              </div>
+            </div>
+            {publishDate && (
+              <div className="text-xs text-zinc-400 whitespace-nowrap">
+                {formatDate(publishDate)}
               </div>
             )}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="text-xs text-zinc-500">
-                Da <span className="newsletter-rubrica-title font-medium" style={{ fontWeight: '600' }}>{item.column.title}</span>
-              </div>
-              {author?.name && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
-                  {author.name}
-                </span>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -51,23 +102,84 @@ function extractAuthorData(authorData: any): Author | undefined {
   return authorData?.data?.attributes || authorData?.attributes || authorData;
 }
 
-// Helper function to get random rubrica links for the "Dalle Rubriche" section
-function getRandomRubricaLinks(columns: any[], count: number = 4) {
-  return columns
-    .flatMap(column => column.links.map((link: any) => ({ ...link, column, author: column.author })))
-    .filter((link: any) => !link.publishDate || new Date(link.publishDate) <= new Date())
-    .sort(() => Math.random() - 0.5)
-    .slice(0, count);
+// Helper function to categorize and sort rubrica links by publication date
+function getCategorizedRubricaLinks(columns: any[]) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(today.getDate() - 2);
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(today.getDate() - 3);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+
+  // Get all published links with their metadata
+  const allLinks = columns
+    .flatMap(column => column.links.map((link: any) => ({
+      ...link,
+      column,
+      author: column.author,
+      publishDate: link.publishDate ? new Date(link.publishDate) : null
+    })))
+    .filter((link: any) => !link.publishDate || link.publishDate <= now)
+    .sort((a, b) => {
+      // Sort by publish date (newest first), null dates go to the end
+      if (!a.publishDate && !b.publishDate) return 0;
+      if (!a.publishDate) return 1;
+      if (!b.publishDate) return -1;
+      return b.publishDate.getTime() - a.publishDate.getTime();
+    });
+
+  // Categorize links by specific days
+  const categories = {
+    today: [] as any[],
+    yesterday: [] as any[],
+    twoDaysAgo: [] as any[],
+    threeDaysAgo: [] as any[],
+    older: [] as any[]
+  };
+
+  allLinks.forEach(link => {
+    if (!link.publishDate) {
+      categories.older.push(link);
+    } else if (link.publishDate >= today) {
+      categories.today.push(link);
+    } else if (link.publishDate >= yesterday) {
+      categories.yesterday.push(link);
+    } else if (link.publishDate >= twoDaysAgo) {
+      categories.twoDaysAgo.push(link);
+    } else if (link.publishDate >= threeDaysAgo) {
+      categories.threeDaysAgo.push(link);
+    } else {
+      categories.older.push(link);
+    }
+  });
+
+  // Limit items per category for display (show all for recent days, limit older content)
+  return {
+    today: categories.today,
+    yesterday: categories.yesterday,
+    twoDaysAgo: categories.twoDaysAgo,
+    threeDaysAgo: categories.threeDaysAgo,
+    older: categories.older.slice(0, 3)
+  };
 }
 
 export default async function NewsletterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; column?: string }>;
+  searchParams: Promise<{ page?: string; column?: string; rubriche?: string; rubrichePage?: string; filterColumn?: string; filterAuthor?: string; filterDate?: string }>;
 }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
   const selectedColumnSlug = params.column;
+  const showAllRubriche = params.rubriche === "all";
+  const rubrichePage = parseInt(params.rubrichePage || "1", 10);
+  const filterColumn = params.filterColumn;
+  const filterAuthor = params.filterAuthor;
+  const filterDate = params.filterDate;
   const { data: issues, pagination } = await getNewsletterIssues(page, 12);
   const dailyLinks = await getDailyLinks();
   const columns = await getColumns();
@@ -77,6 +189,143 @@ export default async function NewsletterPage({
     : null;
 
   const selectedAuthor = extractAuthorData(selectedColumn?.author);
+
+  // Extract external metadata for rubric links
+  let rubricLinksWithMetadata: any[] = [];
+  let categorizedLinksWithMetadata: any = {};
+  let filteredRubricLinksCount = 0;
+
+  if (showAllRubriche) {
+    // Logic for "all" view (vedi tutti)
+    let allRubricLinks = columns
+      .flatMap(column => column.links.map((link: any) => ({
+        ...link,
+        column,
+        author: column.author,
+        publishDate: link.publishDate ? new Date(link.publishDate) : null
+      })))
+      .filter((link: any) => !link.publishDate || link.publishDate <= new Date());
+
+    // Apply filters
+    if (filterColumn) {
+      allRubricLinks = allRubricLinks.filter((link: any) => link.column.slug === filterColumn);
+    }
+    
+    if (filterAuthor) {
+      allRubricLinks = allRubricLinks.filter((link: any) => {
+        const author = extractAuthorData(link.author);
+        return author?.name === filterAuthor;
+      });
+    }
+
+    if (filterDate && filterDate !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      let cutoffDate: Date;
+
+      switch (filterDate) {
+        case "today":
+          cutoffDate = today;
+          break;
+        case "7days":
+          cutoffDate = new Date(today);
+          cutoffDate.setDate(cutoffDate.getDate() - 7);
+          break;
+        case "30days":
+          cutoffDate = new Date(today);
+          cutoffDate.setDate(cutoffDate.getDate() - 30);
+          break;
+        case "90days":
+          cutoffDate = new Date(today);
+          cutoffDate.setDate(cutoffDate.getDate() - 90);
+          break;
+        case "6months":
+          cutoffDate = new Date(today);
+          cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+          break;
+        default:
+          cutoffDate = new Date(0); // No filter
+      }
+
+      if (filterDate === "today") {
+        // For "today", filter: publishDate >= today and < tomorrow
+        allRubricLinks = allRubricLinks.filter((link: any) => {
+          if (!link.publishDate) return false;
+          return link.publishDate >= cutoffDate && link.publishDate < tomorrow;
+        });
+      } else if (cutoffDate.getTime() > 0) {
+        // For other periods, filter: publishDate >= cutoffDate
+        allRubricLinks = allRubricLinks.filter((link: any) => {
+          if (!link.publishDate) return false;
+          return link.publishDate >= cutoffDate;
+        });
+      }
+    }
+
+    filteredRubricLinksCount = allRubricLinks.length;
+
+    // Sort after filtering
+    allRubricLinks.sort((a, b) => {
+      if (!a.publishDate && !b.publishDate) return 0;
+      if (!a.publishDate) return 1;
+      if (!b.publishDate) return -1;
+      return b.publishDate.getTime() - a.publishDate.getTime();
+    });
+
+    // Get current page links for metadata extraction
+    const itemsPerPage = 10;
+    const startIndex = (rubrichePage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageLinks = allRubricLinks.slice(startIndex, endIndex);
+
+    // Extract metadata for current page (limit concurrency to avoid overwhelming servers)
+    rubricLinksWithMetadata = await Promise.all(
+      currentPageLinks.map(async (item) => {
+        try {
+          const metadata = await extractExternalMetadata(item.url);
+          return { ...item, externalMetadata: metadata };
+        } catch (error) {
+          return { ...item, externalMetadata: {} };
+        }
+      })
+    );
+  } else {
+    // Logic for categorized view ("Dalle Rubriche")
+    const categorized = getCategorizedRubricaLinks(columns);
+
+    // Extract metadata only for recent categories (today and yesterday) to avoid too many requests
+    const recentLinks = [
+      ...categorized.today,
+      ...categorized.yesterday,
+      ...categorized.twoDaysAgo.slice(0, 1), // Only 1 from 2 days ago
+      ...categorized.threeDaysAgo.slice(0, 1), // Only 1 from 3 days ago
+    ];
+
+    // Extract metadata for recent links (limit to 4 concurrent requests for main view)
+    const linksWithMetadata = await Promise.all(
+      recentLinks.slice(0, 4).map(async (item) => { // Limit to 4 concurrent requests for main view
+        try {
+          const metadata = await extractExternalMetadata(item.url);
+          return { ...item, externalMetadata: metadata };
+        } catch (error) {
+          return { ...item, externalMetadata: {} };
+        }
+      })
+    );
+
+    // Rebuild categorized structure with metadata
+    const metadataMap = new Map(linksWithMetadata.map(link => [link.url, link.externalMetadata]));
+
+    categorizedLinksWithMetadata = {
+      today: categorized.today.map(link => ({ ...link, externalMetadata: metadataMap.get(link.url) || {} })),
+      yesterday: categorized.yesterday.map(link => ({ ...link, externalMetadata: metadataMap.get(link.url) || {} })),
+      twoDaysAgo: categorized.twoDaysAgo.map(link => ({ ...link, externalMetadata: metadataMap.get(link.url) || {} })),
+      threeDaysAgo: categorized.threeDaysAgo.map(link => ({ ...link, externalMetadata: metadataMap.get(link.url) || {} })),
+      older: categorized.older
+    };
+  }
 
   return (
     <MainLayout>
@@ -263,18 +512,241 @@ export default async function NewsletterPage({
                     })}
                   </div>
                 </section>
+              ) : showAllRubriche ? (
+                <section className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-8 bg-zinc-900" />
+                      <h2 className="text-2xl font-bold uppercase tracking-tight">Tutte le Rubriche</h2>
+                    </div>
+                    <Link
+                      href="/newsletter"
+                      className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+                    >
+                      ← Torna indietro
+                    </Link>
+                  </div>
+
+                  {(() => {
+                    // Extract all links with filters applied (same logic as above)
+                    let allLinks = columns
+                      .flatMap(column => column.links.map((link: any) => ({
+                        ...link,
+                        column,
+                        author: column.author,
+                        publishDate: link.publishDate ? new Date(link.publishDate) : null
+                      })))
+                      .filter((link: any) => !link.publishDate || link.publishDate <= new Date());
+
+                    if (filterColumn) {
+                      allLinks = allLinks.filter((link: any) => link.column.slug === filterColumn);
+                    }
+                    
+                    if (filterAuthor) {
+                      allLinks = allLinks.filter((link: any) => {
+                        const author = extractAuthorData(link.author);
+                        return author?.name === filterAuthor;
+                      });
+                    }
+
+                    // Extract unique authors for filter component
+                    const allAuthors = columns
+                      .map(column => extractAuthorData(column.author))
+                      .filter((author): author is Author => author !== undefined);
+
+                    // Pagination logic for rubrics (using filteredRubricLinksCount from above)
+                    const itemsPerPage = 10;
+                    const totalPages = Math.ceil(filteredRubricLinksCount / itemsPerPage);
+                    
+                    if (filteredRubricLinksCount === 0) {
+                      return (
+                        <>
+                          <RubricheFilters
+                            columns={columns.map(c => ({ title: c.title, slug: c.slug }))}
+                            authors={allAuthors.map(a => ({ name: a.name }))}
+                            selectedColumn={filterColumn}
+                            selectedAuthor={filterAuthor}
+                            selectedDate={filterDate}
+                          />
+                          <div className="content-box p-8 text-center">
+                            <p className="text-zinc-600 dark:text-zinc-400">
+                              Nessun contenuto disponibile dalle rubriche al momento.
+                            </p>
+                          </div>
+                        </>
+                      );
+                    }
+
+                    // Build pagination URL with filters
+                    const buildPaginationUrl = (pageNum: number) => {
+                      const params = new URLSearchParams({ rubriche: "all", rubrichePage: pageNum.toString() });
+                      if (filterColumn) params.set("filterColumn", filterColumn);
+                      if (filterAuthor) params.set("filterAuthor", filterAuthor);
+                      if (filterDate) params.set("filterDate", filterDate);
+                      return `/newsletter?${params.toString()}`;
+                    };
+
+                    return (
+                      <>
+                        <RubricheFilters
+                          columns={columns.map(c => ({ title: c.title, slug: c.slug }))}
+                          authors={allAuthors.map(a => ({ name: a.name }))}
+                          selectedColumn={filterColumn}
+                          selectedAuthor={filterAuthor}
+                        />
+                        
+                        {filteredRubricLinksCount > 0 && (
+                          <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+                            {filteredRubricLinksCount} {filteredRubricLinksCount === 1 ? 'contenuto trovato' : 'contenuti trovati'}
+                          </div>
+                        )}
+                        
+                        <div className="flex flex-col space-y-3">
+                          {rubricLinksWithMetadata.map((item, i) => (
+                            <RubricaCard key={`all-${(rubrichePage - 1) * 10 + i}`} item={item} index={(rubrichePage - 1) * 10 + i} compact={true} />
+                          ))}
+                        </div>
+
+                        {/* Pagination controls */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-4 pt-8">
+                            {rubrichePage > 1 && (
+                              <Link
+                                href={buildPaginationUrl(rubrichePage - 1)}
+                                className="pagination-button"
+                              >
+                                ← Precedente
+                              </Link>
+                            )}
+                            <span className="text-sm font-medium text-zinc-500">
+                              Pagina {rubrichePage} di {totalPages}
+                            </span>
+                            {rubrichePage < totalPages && (
+                              <Link
+                                href={buildPaginationUrl(rubrichePage + 1)}
+                                className="pagination-button"
+                              >
+                                Successiva →
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </section>
               ) : (
-                <section className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-8 bg-zinc-900" />
-                    <h2 className="text-2xl font-bold uppercase tracking-tight">Dalle Rubriche</h2>
+                <section className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-8 bg-zinc-900" />
+                      <h2 className="text-2xl font-bold uppercase tracking-tight">Dalle Rubriche</h2>
+                    </div>
+                    <Link
+                      href="/newsletter?rubriche=all"
+                      className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+                    >
+                      Vedi tutti →
+                    </Link>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {getRandomRubricaLinks(columns, 4)
-                      .map((item, i) => (
-                        <RubricaCard key={i} item={item} index={i} />
-                      ))}
-                  </div>
+
+                  {(() => {
+                    const categorizedLinks = categorizedLinksWithMetadata;
+                    const hasContent = categorizedLinks.today.length > 0 ||
+                                     categorizedLinks.yesterday.length > 0 ||
+                                     categorizedLinks.twoDaysAgo.length > 0 ||
+                                     categorizedLinks.threeDaysAgo.length > 0 ||
+                                     categorizedLinks.older.length > 0;
+
+                    if (!hasContent) {
+                      return (
+                        <div className="content-box p-8 text-center">
+                          <p className="text-zinc-600 dark:text-zinc-400">
+                            Nessun contenuto disponibile dalle rubriche al momento.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-8">
+                        {/* Oggi */}
+                        {categorizedLinks.today.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-5 bg-green-500 rounded-full" />
+                              <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">Oggi</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {categorizedLinks.today.map((item: any, i: number) => (
+                                <RubricaCard key={`today-${i}`} item={item} index={i} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Ieri */}
+                        {categorizedLinks.yesterday.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
+                              <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-400">Ieri</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {categorizedLinks.yesterday.map((item: any, i: number) => (
+                                <RubricaCard key={`yesterday-${i}`} item={item} index={i} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 2 giorni fa */}
+                        {categorizedLinks.twoDaysAgo.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-5 bg-purple-500 rounded-full" />
+                              <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-400">2 giorni fa</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {categorizedLinks.twoDaysAgo.map((item: any, i: number) => (
+                                <RubricaCard key={`twoDaysAgo-${i}`} item={item} index={i} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3 giorni fa */}
+                        {categorizedLinks.threeDaysAgo.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-5 bg-orange-500 rounded-full" />
+                              <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-400">3 giorni fa</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {categorizedLinks.threeDaysAgo.map((item: any, i: number) => (
+                                <RubricaCard key={`threeDaysAgo-${i}`} item={item} index={i} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Più vecchi */}
+                        {categorizedLinks.older.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-5 bg-zinc-500 rounded-full" />
+                              <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-400">Contenuti precedenti</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {categorizedLinks.older.map((item: any, i: number) => (
+                                <RubricaCard key={`older-${i}`} item={item} index={i} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </section>
               )}
 
