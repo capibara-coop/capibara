@@ -453,20 +453,32 @@ body {
 
 /* Force black text for newsletter card descriptions in light mode */
 .newsletter-card-description {
-  color: rgb(24 24 27) !important; /* zinc-900 */
-}
-
-[data-theme="dark"] .newsletter-card-description {
-  color: rgb(212 212 216) !important; /* zinc-300 */
-}
-
-/* Ensure newsletter card descriptions override any other color rules */
-.newsletter-card-description {
   color: rgb(24 24 27) !important; /* zinc-900 in light mode */
 }
 
 [data-theme="dark"] .newsletter-card-description {
   color: rgb(212 212 216) !important; /* zinc-300 in dark mode */
+}
+
+/* Preview box inside newsletter cards */
+.newsletter-preview-box {
+  /* Light mode: box bianco, bordo chiaro */
+  background-color: #ffffff !important;
+  border-color: rgb(228 228 231) !important; /* zinc-200 */
+}
+
+[data-theme="dark"] .newsletter-preview-box {
+  background-color: rgba(39, 39, 42, 0.5) !important; /* zinc-800/50 */
+  border-color: rgb(63 63 70) !important; /* zinc-700 */
+}
+
+.newsletter-preview-text {
+  /* Light mode: testo nero per massimo contrasto sul bianco */
+  color: rgb(24 24 27) !important; /* zinc-900 */
+}
+
+[data-theme="dark"] .newsletter-preview-text {
+  color: rgb(212 212 216) !important; /* zinc-300 */
 }
 
 /* Force black text for newsletter author names in light mode */
