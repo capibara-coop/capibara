@@ -40,20 +40,20 @@ function RubricaCard({ item, index, compact = false }: { item: any; index: numbe
 
         {/* External metadata preview */}
         {externalMetadata.title && (
-          <div className={`mt-2 p-2 rounded-md bg-white dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700`}>
+          <div className={`mt-2 p-2 rounded-md border newsletter-preview-box`}>
             <div className="flex items-start gap-2">
               <div className="w-1 h-1 rounded-full bg-zinc-400 mt-2 flex-shrink-0"></div>
               <div className="min-w-0 flex-1">
                 {externalMetadata.siteName && (
-                  <div className="text-xs text-zinc-700 dark:text-zinc-400 mb-1">
+                  <div className="text-xs newsletter-preview-text mb-1">
                     {externalMetadata.siteName}
                   </div>
                 )}
-                <div className="text-xs font-medium text-zinc-900 dark:text-zinc-300 line-clamp-1">
+                <div className="text-xs font-medium newsletter-preview-text line-clamp-1">
                   {externalMetadata.title}
                 </div>
                 {externalMetadata.description && (
-                  <div className="text-xs text-zinc-800 dark:text-zinc-400 mt-1 line-clamp-2">
+                  <div className="text-xs newsletter-preview-text mt-1 line-clamp-2">
                     {externalMetadata.description}
                   </div>
                 )}
