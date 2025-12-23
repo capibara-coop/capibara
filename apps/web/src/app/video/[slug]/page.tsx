@@ -90,6 +90,9 @@ export default async function VideoEpisodePage({
   const { url: imageUrl } = extractHeroImage(episode.heroImage);
   const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
 
+  const isVertical = episode.videoOrientation === "vertical";
+  const embedSrc = toYoutubeEmbedUrl(episode.videoUrl) ?? episode.videoUrl ?? undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
@@ -98,7 +101,8 @@ export default async function VideoEpisodePage({
     thumbnailUrl: finalImageUrl,
     uploadDate: episode.publishDate || undefined,
     contentUrl: episode.videoUrl,
-    embedUrl: toYoutubeEmbedUrl(episode.videoUrl) || episode.videoUrl,
+    // Preferisci l'embed YouTube se riconosciuto, altrimenti usa direttamente l'URL originale (es. Cloudinary)
+    embedUrl: toYoutubeEmbedUrl(episode.videoUrl) || episode.videoUrl || undefined,
     duration: episode.durationSeconds
       ? `PT${Math.floor(episode.durationSeconds / 60)}M${episode.durationSeconds % 60}S`
       : undefined,
@@ -150,14 +154,17 @@ export default async function VideoEpisodePage({
             )}
           </div>
 
-          {episode.synopsis && (
-            <p className="article-excerpt">{episode.synopsis}</p>
-          )}
+          {episode.synopsis && <p className="article-excerpt">{episode.synopsis}</p>}
 
-          {toYoutubeEmbedUrl(episode.videoUrl) && (
-            <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
+          {embedSrc && (
+            <div
+              className={`overflow-hidden rounded-2xl bg-black ${
+                isVertical ? "mx-auto max-w-sm aspect-[9/16]" : "w-full aspect-video"
+              }`}
+            >
               <iframe
-                src={toYoutubeEmbedUrl(episode.videoUrl) ?? undefined}
+                // Se è un URL YouTube lo convertiamo a embed, altrimenti usiamo l'URL così com'è (es. Cloudinary embed/player)
+                src={embedSrc}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
