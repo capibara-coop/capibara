@@ -17,18 +17,16 @@ function sortLinksByPublishDate(links: any[]): any[] {
 
 // Funzione helper per ordinare i link in un'entità column
 function sortColumnLinks(column: any): any {
-  if (!column) return column;
-  // Crea una copia per evitare mutazioni
-  const columnCopy = { ...column };
-  if (columnCopy && columnCopy.links && Array.isArray(columnCopy.links)) {
-    columnCopy.links = sortLinksByPublishDate([...columnCopy.links]);
+  if (column && column.links && Array.isArray(column.links)) {
+    column.links = sortLinksByPublishDate(column.links);
   }
-  return columnCopy;
+  return column;
 }
 
 export default factories.createCoreService('api::column.column' as any, ({ strapi }: { strapi: Core.Strapi }) => ({
   async find(params: any) {
     // Usa entityService direttamente per ottenere i dati con le relazioni
+    // publicationState viene gestito automaticamente da entityService in Strapi 5 se presente nei params
     const results = await strapi.entityService.findMany('api::column.column' as any, {
       ...params,
       populate: params?.populate || ['links', 'author'],
@@ -44,6 +42,7 @@ export default factories.createCoreService('api::column.column' as any, ({ strap
 
   async findOne(documentId: any, params: any) {
     // Usa entityService direttamente per ottenere i dati con le relazioni
+    // publicationState viene gestito automaticamente da entityService in Strapi 5 se presente nei params
     const result = await strapi.entityService.findOne('api::column.column' as any, documentId, {
       ...params,
       populate: params?.populate || ['links', 'author'],
