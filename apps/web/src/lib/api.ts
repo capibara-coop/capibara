@@ -746,7 +746,10 @@ export async function getColumns() {
     "/api/columns",
     {
       query: {
-        populate: "*",
+        "populate[0]": "links",
+        "populate[1]": "author",
+        "populate[2]": "author.avatar",
+        "populate[3]": "cover",
         "publicationState": "live",
         "sort[0]": "publishedAt:desc",
         "sort[1]": "updatedAt:desc",
@@ -778,11 +781,13 @@ export async function getColumns() {
     
     // Debug in development
     if (process.env.NODE_ENV === 'development') {
+      const authorData: any = column.author;
       console.log('Processed column:', {
         title: column.title,
         slug: column.slug,
         linksCount: column.links?.length ?? 0,
         hasAuthor: !!column.author,
+        hasAvatar: !!(authorData?.data?.attributes?.avatar || authorData?.attributes?.avatar || authorData?.avatar),
       });
     }
     

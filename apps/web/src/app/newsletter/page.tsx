@@ -65,11 +65,11 @@ function RubricaCard({ item, index, compact = false }: { item: any; index: numbe
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-wrap">
               {author?.avatar && (
-                <div className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0`}>
+                <div className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-200 overflow-hidden flex items-center justify-center shrink-0`}>
                   <img
                     src={extractHeroImage(author.avatar).url ?? ""}
                     alt={author.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain translate-y-1.5 scale-110"
                   />
                 </div>
               )}
