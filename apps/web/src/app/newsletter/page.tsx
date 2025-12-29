@@ -117,7 +117,7 @@ function getCategorizedRubricaLinks(columns: any[]) {
 
   // Get all published links with their metadata
   const allLinks = columns
-    .flatMap(column => column.links.map((link: any) => ({
+    .flatMap(column => (column.links || []).map((link: any) => ({
       ...link,
       column,
       author: column.author,
@@ -198,7 +198,7 @@ export default async function NewsletterPage({
   if (showAllRubriche) {
     // Logic for "all" view (vedi tutti)
     let allRubricLinks = columns
-      .flatMap(column => column.links.map((link: any) => ({
+      .flatMap(column => (column.links || []).map((link: any) => ({
         ...link,
         column,
         author: column.author,
@@ -442,7 +442,7 @@ export default async function NewsletterPage({
                 )}
 
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {selectedColumn.links
+                  {(selectedColumn.links || [])
                     .filter(link => !link.publishDate || new Date(link.publishDate) <= new Date())
                     .map((link, j) => (
                     <div key={j} className="content-box p-6 space-y-4 hover:border-zinc-900 transition-colors group h-full flex flex-col">
@@ -531,7 +531,7 @@ export default async function NewsletterPage({
                   {(() => {
                     // Extract all links with filters applied (same logic as above)
                     let allLinks = columns
-                      .flatMap(column => column.links.map((link: any) => ({
+                      .flatMap(column => (column.links || []).map((link: any) => ({
                         ...link,
                         column,
                         author: column.author,

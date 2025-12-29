@@ -113,6 +113,15 @@ async function strapiFetch<T>(
           "\n  Settings > Users & Permissions > Roles > Public",
           "\n  Enable 'find' and 'findOne' for all content types"
         );
+      } else if (res.status === 404) {
+        console.warn(
+          `⚠️ Strapi returned 404 for ${path}. This endpoint might not exist yet.`,
+          "\n  Make sure:",
+          "\n  1. Strapi server is running and has been restarted after creating the content type",
+          "\n  2. The content type is properly configured in Strapi",
+          "\n  3. Public permissions are configured:",
+          "\n     Settings > Users & Permissions > Roles > Public > [Content Type] > Enable 'find'"
+        );
       } else {
         console.error(`Strapi request failed: ${res.status} ${res.statusText} for ${path}`);
       }
@@ -718,22 +727,22 @@ export async function getColumns() {
     "/api/columns",
     {
       query: {
-        "populate[0]": "author",
-        "populate[1]": "author.avatar",
-        "populate[2]": "links",
-        "populate[3]": "cover",
+        populate: "*",
         "publicationState": "live",
         "sort[0]": "publishedAt:desc",
         "sort[1]": "updatedAt:desc",
       },
-      // Note: links.publishDate is automatically populated since links is a component
       revalidate: 60,
     }
   );
 
   return (response.data?.map((item) => {
-    if (item.attributes) return item.attributes;
-    return item;
+    const column = item.attributes ?? item;
+    // Ensure links is always an array, even if not populated
+    if (column && !column.links) {
+      column.links = [];
+    }
+    return column;
   }) ?? []) as Column[];
 }
 
