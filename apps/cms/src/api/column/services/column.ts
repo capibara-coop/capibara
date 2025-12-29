@@ -17,10 +17,13 @@ function sortLinksByPublishDate(links: any[]): any[] {
 
 // Funzione helper per ordinare i link in un'entità column
 function sortColumnLinks(column: any): any {
-  if (column && column.links && Array.isArray(column.links)) {
-    column.links = sortLinksByPublishDate(column.links);
+  if (!column) return column;
+  // Crea una copia per evitare mutazioni
+  const columnCopy = { ...column };
+  if (columnCopy && columnCopy.links && Array.isArray(columnCopy.links)) {
+    columnCopy.links = sortLinksByPublishDate([...columnCopy.links]);
   }
-  return column;
+  return columnCopy;
 }
 
 export default factories.createCoreService('api::column.column' as any, ({ strapi }: { strapi: Core.Strapi }) => ({
