@@ -9,6 +9,7 @@ import {
   List,
   Lock,
   Mail,
+  Map,
   MessageCircle,
   PlayCircle,
   Search,
@@ -20,6 +21,8 @@ import {
   UserCircle,
   Menu,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -98,7 +101,7 @@ const primaryNav: NavLink[] = [
   {
     label: "Newsroom",
     icon: Mail,
-    href: "/newsletter",
+    href: "/newsroom",
   },
   { label: "Feed", icon: List, href: "/feed" },
   { 
@@ -123,6 +126,13 @@ const primaryNav: NavLink[] = [
     colorLight: "bg-purple-100 border-purple-500 text-purple-900"
   },
   { label: "Archivio", icon: Archive, href: "/archivio" },
+  {
+    label: "Conflitti",
+    icon: Map,
+    href: "/conflitti",
+    color: "bg-red-500/20 border-red-500/50 text-white",
+    colorLight: "bg-red-100 border-red-500 text-red-900"
+  },
   { label: "Contenuti Extra", icon: Star, href: "/extra", locked: true },
 ];
 
@@ -139,12 +149,14 @@ const NavGroup = ({
   currentPath,
   isDark,
   onLinkClick,
+  isCollapsed = false,
 }: {
   title?: string;
   links: NavLink[];
   currentPath: string;
   isDark: boolean;
   onLinkClick?: () => void;
+  isCollapsed?: boolean;
 }) => {
   // Controlla se c'è un link più specifico (più lungo) che corrisponde al pathname
   const hasMoreSpecificMatch = (href: string) => {
@@ -158,7 +170,7 @@ const NavGroup = ({
 
   return (
     <div className="space-y-1">
-      {title && (
+      {title && !isCollapsed && (
         <p
           className={`px-3 text-xs font-semibold uppercase tracking-[0.25em] ${
             isDark ? "text-zinc-500" : "text-zinc-500"
@@ -212,11 +224,12 @@ const NavGroup = ({
           key={item.label}
           href={item.href}
           onClick={onLinkClick}
-          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${baseClasses} ${borderClass}`}
+          className={`group relative flex flex-col rounded-2xl ${isCollapsed ? 'px-2 py-3 items-center' : 'px-3 py-2'} text-sm transition ${baseClasses} ${borderClass}`}
+          title={isCollapsed ? item.label : undefined}
         >
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
             {item.icon === CapibaraLogoIcon ? (
-              <CapibaraLogoIcon 
+              <CapibaraLogoIcon
                 className={`h-4 w-4 ${iconClasses}`}
                 isDark={isDark}
                 isActive={isActive}
@@ -224,19 +237,35 @@ const NavGroup = ({
             ) : (
               <item.icon className={`h-4 w-4 ${iconClasses}`} />
             )}
-            <span className="flex-1">{item.label}</span>
-            {item.locked && (
-              <span
-                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${lockedClasses}`}
-              >
-                <Lock className="h-3 w-3" />
-                Solo membri
-              </span>
-            )}
-            {item.notify && (
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            {!isCollapsed && (
+              <>
+                <span className="flex-1">{item.label}</span>
+                {item.locked && (
+                  <span
+                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${lockedClasses}`}
+                  >
+                    <Lock className="h-3 w-3" />
+                    Solo membri
+                  </span>
+                )}
+                {item.notify && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                )}
+              </>
             )}
           </div>
+
+          {/* Tooltip per sidebar collassata */}
+          {isCollapsed && (
+            <div className={`absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${
+              isDark ? 'bg-zinc-800 text-white' : 'bg-zinc-900 text-white'
+            }`}>
+              {item.label}
+              <div className={`absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent ${
+                isDark ? 'border-r-zinc-800' : 'border-r-zinc-900'
+              }`} />
+            </div>
+          )}
           {item.children && (
             <div
               className={`mt-2 space-y-1 border-l pl-5 text-xs ${childrenBorder} ${childrenText}`}
@@ -299,6 +328,9 @@ export default function MainLayout({
   // Stato per il menu mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+  // Stato per la sidebar collassabile (solo desktop)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+
   // Controlla se mostrare il modale al primo accesso
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -308,6 +340,22 @@ export default function MainLayout({
       }
     }
   }, []);
+
+  // Carica lo stato della sidebar dal localStorage
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedCollapsed = localStorage.getItem("capibara-sidebar-collapsed");
+    if (savedCollapsed) {
+      setIsSidebarCollapsed(savedCollapsed === "true");
+    }
+  }, []);
+
+  // Salva lo stato della sidebar nel localStorage quando cambia
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("capibara-sidebar-collapsed", isSidebarCollapsed.toString());
+    }
+  }, [isSidebarCollapsed]);
 
   // Chiudi il menu mobile quando si naviga
   React.useEffect(() => {
@@ -343,70 +391,114 @@ export default function MainLayout({
       }`}
     >
       <aside
-        className={`sticky top-0 hidden h-screen w-72 flex-shrink-0 flex-col px-4 py-6 lg:flex ${
+        className={`sticky top-0 hidden h-screen flex-shrink-0 flex-col ${isSidebarCollapsed ? 'px-2 py-6' : 'px-4 py-6'} lg:flex transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? "w-16" : "w-72"
+        } ${
           isDark ? "border-r border-white/5 bg-zinc-900" : "border-r border-zinc-200 bg-white"
         }`}
       >
-        <Link href="/" className="flex items-center justify-between px-3">
-          <div className="flex items-center gap-3">
-            <Image
-              src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
-              alt="Capibara logo"
-              width={80}
-              height={80}
-              className="h-20 w-20 rounded-2xl bg-white/5 object-contain p-2"
-              priority
-            />
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-base font-semibold tracking-wide ${
-                    isDark ? "text-white" : "text-zinc-900"
-                  }`}
-                >
-                  Capibara
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                    isDark
-                      ? "bg-gradient-to-r from-amber-400 to-amber-600 text-black"
-                      : "bg-gradient-to-r from-amber-500 to-amber-600 text-black"
-                  }`}
-                >
-                  Beta
-                </span>
-              </div>
-              <span className="text-[11px] text-zinc-500">
-                Storie da chi non ha potere
-              </span>
+        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'}`}>
+          <Link href="/" className={`${isSidebarCollapsed ? '' : 'flex-1'}`}>
+            <div className={`flex items-center ${isSidebarCollapsed ? 'gap-0' : 'gap-3'}`}>
+              <Image
+                src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+                alt="Capibara logo"
+                width={isSidebarCollapsed ? 48 : 80}
+                height={isSidebarCollapsed ? 36 : 60}
+                className={`${isSidebarCollapsed ? 'h-9 w-12' : 'h-15 w-20'} ${isSidebarCollapsed ? 'rounded-md' : 'rounded-2xl'} bg-white/5 object-contain ${isSidebarCollapsed ? 'p-1' : 'p-2'}`}
+                priority
+              />
+              {!isSidebarCollapsed && (
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-base font-semibold tracking-wide ${
+                        isDark ? "text-white" : "text-zinc-900"
+                      }`}
+                    >
+                      Capibara
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                        isDark
+                          ? "bg-gradient-to-r from-amber-400 to-amber-600 text-black"
+                          : "bg-gradient-to-r from-amber-500 to-amber-600 text-black"
+                      }`}
+                    >
+                      Beta
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500">
+                    Storie da chi non ha potere
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
         <div className="mt-8 flex-1 space-y-8 overflow-y-auto">
-          <NavGroup links={primaryNav} currentPath={pathname} isDark={isDark} />
+          <NavGroup links={primaryNav} currentPath={pathname} isDark={isDark} isCollapsed={isSidebarCollapsed} />
           <NavGroup
             title="Community"
             links={utilityNav}
             currentPath={pathname}
             isDark={isDark}
+            isCollapsed={isSidebarCollapsed}
           />
         </div>
-        <div className="mt-4 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
-          <p className="flex flex-wrap gap-2">
-            <span>Contattaci</span>
-            <span>•</span>
-            <span>Diventa partner</span>
-          </p>
-          <p className="flex flex-wrap gap-2">
-            <Link href="/privacy" className="hover:text-zinc-300">
-              Privacy
-            </Link>
-            <span>•</span>
-            <Link href="/termini" className="hover:text-zinc-300">
-              Termini
-            </Link>
-          </p>
-        </div>
+
+        {!isSidebarCollapsed && (
+          <div className="mt-4 border-t border-white/5 pt-4 text-xs text-zinc-500">
+            <div className="flex items-center justify-between mb-3">
+              <div className="space-y-3 flex-1">
+                <p className="flex flex-wrap gap-2">
+                  <span>Contattaci</span>
+                  <span>•</span>
+                  <span>Diventa partner</span>
+                </p>
+                <p className="flex flex-wrap gap-2">
+                  <Link href="/privacy" className="hover:text-zinc-300">
+                    Privacy
+                  </Link>
+                  <span>•</span>
+                  <Link href="/termini" className="hover:text-zinc-300">
+                    Termini
+                  </Link>
+                </p>
+              </div>
+              <button
+                onClick={() => setIsSidebarCollapsed(true)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition ml-4 ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="Collassa sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Pulsante toggle per sidebar collassata */}
+        {isSidebarCollapsed && (
+          <div className="mt-auto px-0 pb-4">
+            <div className="flex justify-center">
+              <button
+                onClick={() => setIsSidebarCollapsed(false)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="Espandi sidebar"
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Menu Mobile */}
@@ -470,11 +562,12 @@ export default function MainLayout({
               </button>
             </div>
             <div className="flex-1 space-y-8">
-              <NavGroup 
-                links={primaryNav} 
-                currentPath={pathname} 
+              <NavGroup
+                links={primaryNav}
+                currentPath={pathname}
                 isDark={isDark}
                 onLinkClick={() => setIsMobileMenuOpen(false)}
+                isCollapsed={false}
               />
               <NavGroup
                 title="Community"
@@ -482,6 +575,7 @@ export default function MainLayout({
                 currentPath={pathname}
                 isDark={isDark}
                 onLinkClick={() => setIsMobileMenuOpen(false)}
+                isCollapsed={false}
               />
             </div>
             <div className="mt-8 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
@@ -633,38 +727,41 @@ export default function MainLayout({
               </div>
             </div>
           </div>
-          <div className="flex justify-center">
-            <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-              <form
-                action="/archivio"
-                method="get"
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 ${
-                  isDark
-                    ? "border border-white/10 bg-white/5"
-                    : "border border-zinc-300 bg-white"
-                }`}
-              >
-                <Search
-                  className={`h-4 w-4 ${
-                    isDark ? "text-zinc-500" : "text-zinc-400"
-                  }`}
-                />
-                <input
-                  name="q"
-                  type="search"
-                  className={`w-full bg-transparent text-sm focus:outline-none ${
+          {/* Hide global search bar on archivio, newsroom and conflitti pages since they have their own search functionality */}
+          {pathname !== "/archivio" && !pathname.startsWith("/newsroom") && pathname !== "/conflitti" && (
+            <div className="flex justify-center">
+              <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-24">
+                <form
+                  action="/archivio"
+                  method="get"
+                  className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 ${
                     isDark
-                      ? "text-white placeholder:text-zinc-500"
-                      : "text-zinc-900 placeholder:text-zinc-400"
+                      ? "border border-white/10 bg-white/5"
+                      : "border border-zinc-300 bg-white"
                   }`}
-                  placeholder="Cerca episodi, podcast o newsletter"
-                />
-              </form>
+                >
+                  <Search
+                    className={`h-4 w-4 ${
+                      isDark ? "text-zinc-500" : "text-zinc-400"
+                    }`}
+                  />
+                  <input
+                    name="q"
+                    type="search"
+                    className={`w-full bg-transparent text-sm focus:outline-none ${
+                      isDark
+                        ? "text-white placeholder:text-zinc-500"
+                        : "text-zinc-900 placeholder:text-zinc-400"
+                    }`}
+                    placeholder="Cerca episodi, podcast o newsroom"
+                  />
+                </form>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
+        <main className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-24">
           {children}
         </main>
       </div>

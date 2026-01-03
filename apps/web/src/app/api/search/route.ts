@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
       podcasts: [],
       newsletters: [],
       articles: [],
+      columns: [],
+      rubricaLinks: [],
       pagination: {
         page: 1,
         pageSize: 12,
@@ -32,6 +34,8 @@ export async function GET(request: NextRequest) {
         podcasts: [],
         newsletters: [],
         articles: [],
+        columns: [],
+        rubricaLinks: [],
         pagination: {
           page: 1,
           pageSize: 12,

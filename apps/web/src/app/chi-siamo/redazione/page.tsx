@@ -109,11 +109,6 @@ export default async function RedazionePage() {
             unite e uniti dalla passione per un&apos;informazione indipendente
             e di parte.
           </p>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl">
-            Questa pagina si aggiorna automaticamente in base agli autori
-            configurati in Strapi. Aggiungi o modifica un autore nel CMS per
-            aggiornare la redazione.
-          </p>
         </section>
 
         {authors.length === 0 ? (

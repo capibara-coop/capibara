@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Filter, BookOpen, User, Calendar, CalendarDays, Clock, Sparkles } from "lucide-react";
+import { Filter, BookOpen, User, Calendar, CalendarDays, Clock, Sparkles, Search } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
 
 interface Column {
@@ -19,6 +19,8 @@ interface RubricheFiltersProps {
   selectedColumn?: string;
   selectedAuthor?: string;
   selectedDate?: string;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export default function RubricheFilters({
@@ -27,6 +29,8 @@ export default function RubricheFilters({
   selectedColumn,
   selectedAuthor,
   selectedDate,
+  searchQuery,
+  onSearchChange,
 }: RubricheFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,7 +62,7 @@ export default function RubricheFilters({
     // Reset to first page when filtering
     params.set("rubrichePage", "1");
     
-    router.push(`/newsletter?${params.toString()}`);
+    router.push(`/newsroom?${params.toString()}`);
   };
 
   // Get unique authors (remove duplicates)
@@ -104,6 +108,23 @@ export default function RubricheFilters({
       </div>
       
       <div className="flex flex-wrap gap-4">
+        {/* Search Input */}
+        <div className="flex-1 min-w-[200px]">
+          <label className="rubriche-filters-dropdown-label text-sm mb-1 block">
+            Cerca
+          </label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              type="text"
+              value={searchQuery || ""}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder="Cerca nelle rubriche..."
+              className="rubriche-filters-search-input w-full pl-10 pr-3 py-1.5 text-sm border rounded-md transition-colors"
+            />
+          </div>
+        </div>
+
         {/* Rubrica Filter */}
         <CustomDropdown
           label="Rubrica"
@@ -132,7 +153,7 @@ export default function RubricheFilters({
         />
 
         {/* Reset filters button */}
-        {(selectedColumn || selectedAuthor || selectedDate) && (
+        {(selectedColumn || selectedAuthor || selectedDate || searchQuery) && (
           <div className="flex items-end">
             <button
               onClick={() => {
@@ -141,8 +162,10 @@ export default function RubricheFilters({
                 params.delete("filterColumn");
                 params.delete("filterAuthor");
                 params.delete("filterDate");
+                params.delete("search");
                 params.set("rubrichePage", "1");
-                router.push(`/newsletter?${params.toString()}`);
+                router.push(`/newsroom?${params.toString()}`);
+                onSearchChange?.("");
               }}
               className="rubriche-filters-reset px-3 py-1.5 text-sm underline underline-offset-2 whitespace-nowrap"
             >

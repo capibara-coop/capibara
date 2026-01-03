@@ -4,7 +4,7 @@ import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 
-export default async function NewsletterIssuePage({
+export default async function NewsroomIssuePage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -29,7 +29,7 @@ export default async function NewsletterIssuePage({
         <article className="space-y-8">
           <div>
             <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide meta-text">
-              <span>Newsletter</span>
+              <span>Newsroom</span>
               {issue.isPremium && (
                 <span className="locked-badge">
                   Abbonati

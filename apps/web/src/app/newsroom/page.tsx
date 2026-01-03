@@ -3,7 +3,7 @@ import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
-import { Instagram, Music2, Linkedin, Globe } from "lucide-react";
+import { Instagram, Music2, Linkedin, Globe, ExternalLink, BookOpen } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import RubricheFilters from "@/components/RubricheFilters";
 
@@ -12,6 +12,7 @@ function RubricaCard({ item, index, compact = false }: { item: any; index: numbe
   const externalMetadata = item.externalMetadata || {};
   const author = extractAuthorData(item.author);
   const publishDate = item.publishDate ? new Date(item.publishDate) : null;
+
 
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -33,27 +34,27 @@ function RubricaCard({ item, index, compact = false }: { item: any; index: numbe
   return (
     <div key={index} className="content-box overflow-hidden border-l-4 border-zinc-200 hover:border-zinc-900 transition-colors flex flex-col">
       <div className={`${compact ? 'p-3' : 'p-5'} flex-1 min-w-0`}>
-        <a href={item.url} target="_blank" rel="noopener noreferrer" className={`font-semibold ${compact ? 'text-base' : 'text-lg'} hover:underline decoration-2 underline-offset-4 line-clamp-2`}>
+        <a href={item.url} target="_blank" rel="noopener noreferrer" className={`font-semibold ${compact ? 'text-base' : 'text-lg'} hover:underline decoration-2 underline-offset-4 line-clamp-2 flex items-center gap-2`}>
           {item.label}
         </a>
-        {item.description && <p className={`text-sm newsletter-card-description ${compact ? 'mt-1 leading-relaxed line-clamp-2' : 'mt-2 leading-relaxed line-clamp-3'}`}>{item.description}</p>}
+        {item.description && <p className={`text-sm newsroom-card-description ${compact ? 'mt-1 leading-relaxed line-clamp-2' : 'mt-2 leading-relaxed line-clamp-3'}`}>{item.description}</p>}
 
         {/* External metadata preview */}
         {externalMetadata.title && (
-          <div className={`mt-2 p-2 rounded-md border newsletter-preview-box`}>
+          <div className={`mt-2 p-2 rounded-md newsroom-preview-box`}>
             <div className="flex items-start gap-2">
-              <div className="w-1 h-1 rounded-full bg-zinc-400 mt-2 flex-shrink-0"></div>
+              <Globe className="h-3 w-3 text-zinc-400 mt-1 flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 {externalMetadata.siteName && (
-                  <div className="text-xs newsletter-preview-text mb-1">
+                  <div className="text-xs newsroom-preview-text mb-1">
                     {externalMetadata.siteName}
                   </div>
                 )}
-                <div className="text-xs font-medium newsletter-preview-text line-clamp-1">
+                <div className="text-xs font-medium newsroom-preview-text line-clamp-1">
                   {externalMetadata.title}
                 </div>
                 {externalMetadata.description && (
-                  <div className="text-xs newsletter-preview-text mt-1 line-clamp-2">
+                  <div className="text-xs newsroom-preview-text mt-1 line-clamp-2">
                     {externalMetadata.description}
                   </div>
                 )}
@@ -75,7 +76,7 @@ function RubricaCard({ item, index, compact = false }: { item: any; index: numbe
               )}
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="text-xs text-zinc-500">
-                  Da <span className="newsletter-rubrica-title font-medium" style={{ fontWeight: '600' }}>{item.column.title}</span>
+                  Da <span className="newsroom-rubrica-title font-medium" style={{ fontWeight: '600' }}>{item.column.title}</span>
                 </div>
                 {author?.name && (
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 ${compact ? 'text-[10px]' : ''}`}>
@@ -170,7 +171,7 @@ function getCategorizedRubricaLinks(columns: any[]) {
 export default async function NewsletterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; column?: string; rubriche?: string; rubrichePage?: string; filterColumn?: string; filterAuthor?: string; filterDate?: string }>;
+  searchParams: Promise<{ page?: string; column?: string; rubriche?: string; rubrichePage?: string; filterColumn?: string; filterAuthor?: string; filterDate?: string; search?: string }>;
 }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
@@ -180,6 +181,7 @@ export default async function NewsletterPage({
   const filterColumn = params.filterColumn;
   const filterAuthor = params.filterAuthor;
   const filterDate = params.filterDate;
+  const searchQuery = params.search;
   const { data: issues, pagination } = await getNewsletterIssues(page, 12);
   const dailyLinks = await getDailyLinks() || [];
   const columns = await getColumns() || [];
@@ -226,11 +228,22 @@ export default async function NewsletterPage({
     if (filterColumn) {
       allRubricLinks = allRubricLinks.filter((link: any) => link.column.slug === filterColumn);
     }
-    
+
     if (filterAuthor) {
       allRubricLinks = allRubricLinks.filter((link: any) => {
         const author = extractAuthorData(link.author);
         return author?.name === filterAuthor;
+      });
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      allRubricLinks = allRubricLinks.filter((link: any) => {
+        const title = link.label?.toLowerCase() || "";
+        const description = link.description?.toLowerCase() || "";
+        const authorName = extractAuthorData(link.author)?.name?.toLowerCase() || "";
+        const columnTitle = link.column?.title?.toLowerCase() || "";
+        return title.includes(query) || description.includes(query) || authorName.includes(query) || columnTitle.includes(query);
       });
     }
 
@@ -353,7 +366,7 @@ export default async function NewsletterPage({
             /* Layout Focus Rubrica */
             <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Link 
-                href="/newsletter"
+                href="/newsroom"
                 className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors group"
               >
                 <span className="group-hover:-translate-x-1 transition-transform">←</span>
@@ -374,7 +387,7 @@ export default async function NewsletterPage({
                   <div>
                     <h1 className="text-4xl font-bold tracking-tight">{selectedColumn.title}</h1>
                     <p className="text-lg text-zinc-600 dark:text-zinc-400 mt-2">
-                      Rubrica curata da <span className="font-semibold newsletter-author-name">{selectedAuthor?.name || "Redazione"}</span>
+                      Rubrica curata da <span className="font-semibold newsroom-author-name">{selectedAuthor?.name || "Redazione"}</span>
                     </p>
                     {(selectedAuthor?.instagram ||
                       selectedAuthor?.tiktok ||
@@ -434,7 +447,7 @@ export default async function NewsletterPage({
                 <div className="flex justify-end">
                   <ShareButton
                     title={selectedColumn.title}
-                    url={`/newsletter?column=${selectedColumn.slug}`}
+                    url={`/newsroom?column=${selectedColumn.slug}`}
                     text={`Scopri la rubrica "${selectedColumn.title}" su Capibara`}
                   />
                 </div>
@@ -451,7 +464,7 @@ export default async function NewsletterPage({
 
                 {selectedColumn.description && (
                   <div className="content-box p-8">
-                    <p className="text-xl newsletter-description-text italic leading-relaxed font-serif">
+                    <p className="text-xl newsroom-description-text italic leading-relaxed font-serif">
                       &ldquo;{selectedColumn.description}&rdquo;
                     </p>
                   </div>
@@ -500,7 +513,7 @@ export default async function NewsletterPage({
               {dailyLinks.length > 0 ? (
                 <section className="space-y-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-8 bg-zinc-900" />
+                    <div className="w-2 h-8 bg-zinc-900 dark:bg-zinc-100" />
                     <h2 className="text-2xl font-bold uppercase tracking-tight">Link del Giorno</h2>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -519,10 +532,11 @@ export default async function NewsletterPage({
                             </div>
                           )}
                           <div className="p-5 flex-1 min-w-0">
-                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2">
+                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-lg hover:underline decoration-2 underline-offset-4 line-clamp-2 flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
                               {link.title}
                             </a>
-                            {link.description && <p className="text-sm newsletter-card-description mt-2 leading-relaxed line-clamp-3">{link.description}</p>}
+                            {link.description && <p className="text-sm newsroom-card-description mt-2 leading-relaxed line-clamp-3">{link.description}</p>}
                           </div>
                         </div>
                       );
@@ -533,11 +547,11 @@ export default async function NewsletterPage({
                 <section className="space-y-8">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-8 bg-zinc-900" />
+                      <div className="w-2 h-8 bg-zinc-900 dark:bg-zinc-100" />
                       <h2 className="text-2xl font-bold uppercase tracking-tight">Tutte le Rubriche</h2>
                     </div>
                     <Link
-                      href="/newsletter"
+                      href="/newsroom"
                       className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
                     >
                       ← Torna indietro
@@ -584,6 +598,18 @@ export default async function NewsletterPage({
                             selectedColumn={filterColumn}
                             selectedAuthor={filterAuthor}
                             selectedDate={filterDate}
+                            searchQuery={searchQuery}
+                            onSearchChange={(query) => {
+                              const params = new URLSearchParams(window.location.search);
+                              params.set("rubriche", "all");
+                              if (query) {
+                                params.set("search", query);
+                              } else {
+                                params.delete("search");
+                              }
+                              params.set("rubrichePage", "1");
+                              window.history.pushState({}, "", `/newsroom?${params.toString()}`);
+                            }}
                           />
                           <div className="content-box p-8 text-center">
                             <p className="text-zinc-600 dark:text-zinc-400">
@@ -600,7 +626,7 @@ export default async function NewsletterPage({
                       if (filterColumn) params.set("filterColumn", filterColumn);
                       if (filterAuthor) params.set("filterAuthor", filterAuthor);
                       if (filterDate) params.set("filterDate", filterDate);
-                      return `/newsletter?${params.toString()}`;
+                      return `/newsroom?${params.toString()}`;
                     };
 
                     return (
@@ -610,6 +636,7 @@ export default async function NewsletterPage({
                           authors={allAuthors.map(a => ({ name: a.name }))}
                           selectedColumn={filterColumn}
                           selectedAuthor={filterAuthor}
+                          selectedDate={filterDate}
                         />
                         
                         {filteredRubricLinksCount > 0 && (
@@ -656,11 +683,11 @@ export default async function NewsletterPage({
                 <section className="space-y-8">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-8 bg-zinc-900" />
+                      <div className="w-2 h-8 bg-zinc-900 dark:bg-zinc-100" />
                       <h2 className="text-2xl font-bold uppercase tracking-tight">Dalle Rubriche</h2>
                     </div>
                     <Link
-                      href="/newsletter?rubriche=all"
+                      href="/newsroom?rubriche=all"
                       className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
                     >
                       Vedi tutti →
@@ -771,7 +798,7 @@ export default async function NewsletterPage({
               {issues.length > 0 && (
                 <section className="space-y-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-8 bg-zinc-900" />
+                    <div className="w-2 h-8 bg-zinc-900 dark:bg-zinc-100" />
                     <h2 className="text-2xl font-bold uppercase tracking-tight">Archivio Premium</h2>
                   </div>
 
@@ -808,7 +835,7 @@ export default async function NewsletterPage({
                     <div className="flex items-center justify-center gap-4 pt-4">
                       {pagination.page > 1 && (
                         <Link
-                          href={`/newsletter?page=${pagination.page - 1}`}
+                          href={`/newsroom?page=${pagination.page - 1}`}
                           className="pagination-button"
                         >
                           ← Precedente
@@ -819,7 +846,7 @@ export default async function NewsletterPage({
                       </span>
                       {pagination.page < pagination.pageCount && (
                         <Link
-                          href={`/newsletter?page=${pagination.page + 1}`}
+                          href={`/newsroom?page=${pagination.page + 1}`}
                           className="pagination-button"
                         >
                           Successiva →
@@ -855,7 +882,7 @@ export default async function NewsletterPage({
                   <div className="p-4 space-y-2">
                     <h3 className="font-bold text-sm leading-tight line-clamp-2">{issues[0].title}</h3>
                     <Link
-                      href="/newsletter"
+                      href="/newsroom"
                       className="text-[10px] font-bold uppercase tracking-wider text-amber-600 hover:text-amber-700 block pt-2"
                     >
                       Torna alla Newsroom <span>→</span>
@@ -867,60 +894,61 @@ export default async function NewsletterPage({
 
             <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-zinc-900" />
+                <BookOpen className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />
                 <h2 className="text-xl font-bold uppercase tracking-tight">Le Rubriche</h2>
               </div>
               
-              <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {columns.map((column, i) => {
                   const author = extractAuthorData(column.author);
                   const isSelected = selectedColumnSlug === column.slug;
 
                   return (
-                    <Link 
-                      key={i} 
-                      href={`/newsletter?column=${column.slug}`}
-                      className={`content-box p-4 space-y-3 transition-all ${
-                        isSelected 
-                          ? "border-zinc-900 bg-zinc-50 dark:bg-zinc-800/50 ring-1 ring-zinc-900" 
+                    <Link
+                      key={i}
+                      href={`/newsroom?column=${column.slug}`}
+                      className={`content-box p-3 space-y-2 transition-all ${
+                        isSelected
+                          ? "border-zinc-900 bg-zinc-50 dark:bg-zinc-800/50 ring-1 ring-zinc-900"
                           : "border-zinc-100 hover:border-zinc-900 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <h3 className="font-bold text-xs leading-tight">{column.title}</h3>
+
+                      {!isSelected && column.description && (
+                        <p className="text-[10px] newsroom-card-description italic leading-relaxed line-clamp-1">
+                          &ldquo;{column.description}&rdquo;
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2">
                         {author?.avatar && (
-                          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
-                            <img 
-                              src={extractHeroImage(author.avatar).url ?? ""} 
-                              alt={author?.name || "Autore"} 
-                              className="w-full h-full object-contain translate-y-1.5 scale-110"
+                          <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-100 overflow-hidden flex items-center justify-center shrink-0">
+                            <img
+                              src={extractHeroImage(author.avatar).url ?? ""}
+                              alt={author?.name || "Autore"}
+                              className="w-full h-full object-contain translate-y-1 scale-110"
                             />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <h3 className="font-bold text-sm leading-tight truncate">{column.title}</h3>
                           <div className="mt-0.5">
                             {author?.name ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
                                 {author.name}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
+                              <span className="text-[9px] text-zinc-600 dark:text-zinc-400 truncate">
                                 Redazione
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
-                      
-                      {!isSelected && column.description && (
-                        <p className="text-[11px] newsletter-card-description italic leading-relaxed line-clamp-2">
-                          &ldquo;{column.description}&rdquo;
-                        </p>
-                      )}
 
                       {isSelected && (
-                        <div className="pt-2">
-                          <span className="text-[10px] font-bold newsletter-featured-text flex items-center gap-1 uppercase tracking-wider">
+                        <div className="pt-1">
+                          <span className="text-[9px] font-bold newsroom-featured-text flex items-center gap-1 uppercase tracking-wider">
                              In primo piano <span className="text-xs">✨</span>
                           </span>
                         </div>
