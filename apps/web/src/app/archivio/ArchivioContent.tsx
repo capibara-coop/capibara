@@ -135,7 +135,7 @@ export function ArchivioContent({
     tag: string;
     locked: boolean;
     slug?: string;
-    type?: "video" | "podcast" | "newsroom" | "article" | "column";
+    type?: "video" | "podcast" | "newsroom" | "article" | "column" | "rubrica-link";
   };
 
   const sortByDateDesc = (a: UnifiedItem, b: UnifiedItem) => {
