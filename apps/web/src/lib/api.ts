@@ -797,6 +797,64 @@ export async function getColumns() {
   return columns;
 }
 
+export async function getPublishedRubricaLinks(limit = 100) {
+  const columns = await getColumns();
+
+  // Debug in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('getPublishedRubricaLinks - columns loaded:', columns.length);
+    columns.forEach(column => {
+      console.log(`Column "${column.title}": ${column.links?.length || 0} links`);
+    });
+  }
+
+  // Extract all published links from all columns
+  const allLinks = columns
+    .flatMap(column => (column.links || []).map((link: any) => ({
+      ...link,
+      column,
+      author: column.author,
+      publishDate: link.publishDate ? new Date(link.publishDate) : null
+    })));
+
+  // Debug: check all links before filtering
+  if (process.env.NODE_ENV === 'development') {
+    console.log('getPublishedRubricaLinks - all links before filtering:', allLinks.length);
+    allLinks.forEach((link, i) => {
+      console.log(`Link ${i}: "${link.label}" - publishDate: ${link.publishDate} - valid: ${!link.publishDate || link.publishDate <= new Date()}`);
+    });
+  }
+
+  const filteredLinks = allLinks
+    .filter((link: any) => {
+      // Must have label and url
+      if (!link.label || !link.url) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Filtering out link without label or url:', link);
+        }
+        return false;
+      }
+      // Must be published (no date or date <= today)
+      return !link.publishDate || link.publishDate <= new Date();
+    })
+    .sort((a, b) => {
+      // Sort by publish date (newest first), null dates go to the end
+      if (!a.publishDate && !b.publishDate) return 0;
+      if (!a.publishDate) return 1;
+      if (!b.publishDate) return -1;
+      return b.publishDate.getTime() - a.publishDate.getTime();
+    })
+    .slice(0, limit); // Limit the results
+
+  // Debug: final result
+  if (process.env.NODE_ENV === 'development') {
+    console.log('getPublishedRubricaLinks - final filtered links:', filteredLinks.length);
+    console.log('getPublishedRubricaLinks - requested limit:', limit);
+  }
+
+  return filteredLinks;
+}
+
 // Search function
 export async function searchContent(query: string, page = 1, pageSize = 12) {
   if (!query || query.trim().length === 0) {
@@ -805,6 +863,8 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
       podcasts: [],
       newsletters: [],
       articles: [],
+      columns: [],
+      rubricaLinks: [],
       pagination: {
         page: 1,
         pageSize,
@@ -815,7 +875,10 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
   }
 
   const searchQuery = query.trim();
-  const [videosRes, podcastsRes, newslettersRes, articlesRes] = await Promise.all([
+
+  // Get published rubrica links for local filtering
+  const [publishedRubricaLinks, videosRes, podcastsRes, newslettersRes, articlesRes, columnsRes] = await Promise.all([
+    getPublishedRubricaLinks(1000), // Get many links for search
     strapiFetch<StrapiPaginatedResponse<VideoEpisode>>(
       "/api/video-episodes",
       {
@@ -878,6 +941,20 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
         revalidate: 60,
       },
     ),
+    strapiFetch<StrapiPaginatedResponse<Column>>(
+      "/api/columns",
+      {
+        query: {
+          populate: "*",
+          "publicationState": "live",
+          "filters[$or][0][title][$containsi]": searchQuery,
+          "filters[$or][1][description][$containsi]": searchQuery,
+          "pagination[page]": page,
+          "pagination[pageSize]": pageSize,
+        },
+        revalidate: 60,
+      },
+    ),
   ]);
 
   const videos = (videosRes.data?.map((item) => {
@@ -900,16 +977,37 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
     return item;
   }) ?? []) as Article[];
 
+  const columns = (columnsRes.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as Column[];
+
+  // Filter published rubrica links by search query
+  const rubricaLinks = publishedRubricaLinks.filter(link =>
+    link.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    link.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    link.column?.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Apply pagination to rubrica links
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRubricaLinks = rubricaLinks.slice(startIndex, endIndex);
+
   const total = (videosRes.meta?.pagination?.total ?? 0) +
     (podcastsRes.meta?.pagination?.total ?? 0) +
     (newslettersRes.meta?.pagination?.total ?? 0) +
-    (articlesRes.meta?.pagination?.total ?? 0);
+    (articlesRes.meta?.pagination?.total ?? 0) +
+    (columnsRes.meta?.pagination?.total ?? 0) +
+    rubricaLinks.length;
 
   return {
     videos,
     podcasts,
     newsletters,
     articles,
+    columns,
+    rubricaLinks: paginatedRubricaLinks,
     pagination: {
       page,
       pageSize,
@@ -918,6 +1016,8 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
         podcastsRes.meta?.pagination?.pageCount ?? 1,
         newslettersRes.meta?.pagination?.pageCount ?? 1,
         articlesRes.meta?.pagination?.pageCount ?? 1,
+        columnsRes.meta?.pagination?.pageCount ?? 1,
+        Math.ceil(rubricaLinks.length / pageSize),
       ),
       total,
     },

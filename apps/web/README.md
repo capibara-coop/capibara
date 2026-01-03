@@ -17,7 +17,7 @@ apps/web/
 ├── src/
 │   ├── app/              # App Router di Next.js
 │   │   ├── articoli/     # Pagine articoli
-│   │   ├── newsletter/   # Pagine newsletter
+│   │   ├── newsroom/   # Pagine newsroom
 │   │   ├── podcast/      # Pagine podcast
 │   │   ├── video/        # Pagine video
 │   │   └── ...
@@ -93,8 +93,8 @@ Il frontend è deployato su **Vercel**. Vedi la documentazione completa:
 - `/` - Homepage
 - `/articoli` - Lista articoli
 - `/articoli/[slug]` - Dettaglio articolo
-- `/newsletter` - Lista newsletter
-- `/newsletter/[slug]` - Dettaglio newsletter
+- `/newsroom` - Lista newsroom
+- `/newsroom/[slug]` - Dettaglio newsroom
 - `/podcast` - Lista podcast
 - `/podcast/[slug]` - Dettaglio episodio podcast
 - `/video` - Lista video

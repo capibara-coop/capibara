@@ -435,11 +435,11 @@ body {
 
 /* Content boxes */
 [data-theme="dark"] .content-box {
-  @apply rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/80 via-zinc-900/20 to-indigo-900/20;
+  @apply rounded-xl border border-white/10 bg-gradient-to-br from-zinc-900/80 via-zinc-900/20 to-indigo-900/20;
 }
 
 [data-theme="light"] .content-box {
-  @apply rounded-3xl border border-zinc-200 bg-white;
+  @apply rounded-xl border border-zinc-200 bg-white;
 }
 
 /* Article excerpt */

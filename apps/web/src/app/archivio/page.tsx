@@ -1,21 +1,23 @@
 import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
-import ArchivioContent from "./ArchivioContent";
+import ArchivioContent, { ArchivioContentProps } from "./ArchivioContent";
 import {
   getLatestVideoEpisodes,
   getLatestPodcastEpisodes,
   getPremiumNewsletterIssues,
   getLatestArticles,
   getColumns,
+  getPublishedRubricaLinks,
 } from "@/lib/api";
 
 export default async function ArchivioPage() {
-  const [videos, podcasts, newsletters, articles, columns] = await Promise.all([
+  const [videos, podcasts, newsletters, articles, columns, rubricaLinks] = await Promise.all([
     getLatestVideoEpisodes(6),
     getLatestPodcastEpisodes(6),
     getPremiumNewsletterIssues(6),
     getLatestArticles(6),
     getColumns(),
+    getPublishedRubricaLinks(), // Senza limite per mostrare tutti i link pubblicati
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function ArchivioPage() {
           initialNewsletters={newsletters}
           initialArticles={articles}
           initialColumns={columns}
+          initialRubricaLinks={rubricaLinks}
         />
       </Suspense>
     </MainLayout>

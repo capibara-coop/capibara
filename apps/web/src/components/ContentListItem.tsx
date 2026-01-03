@@ -7,7 +7,7 @@ type ContentListItemData = {
   tag: string;
   locked?: boolean;
   slug?: string;
-  type?: "video" | "podcast" | "newsroom" | "article" | "column";
+  type?: "video" | "podcast" | "newsroom" | "article" | "column" | "rubrica-link";
 };
 
 export default function ContentListItem({
@@ -18,7 +18,8 @@ export default function ContentListItem({
   const getHref = () => {
     if (!item.slug || !item.type) return "#";
     if (item.type === "article") return `/articoli/${item.slug}`;
-    if (item.type === "column") return `/newsletter?column=${item.slug}`;
+    if (item.type === "column") return `/newsroom?column=${item.slug}`;
+    if (item.type === "rubrica-link") return item.slug; // slug contiene l'URL esterno
     return `/${item.type}/${item.slug}`;
   };
 
@@ -49,6 +50,19 @@ export default function ContentListItem({
   );
 
   if (item.slug && item.type) {
+    if (item.type === "rubrica-link") {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          {Row}
+        </a>
+      );
+    }
+
     return (
       <Link href={href} className="block">
         {Row}
