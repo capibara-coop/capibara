@@ -1,6 +1,6 @@
 ## Breaking Media CMS
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Monorepo di partenza per una media company moderna composta da:
 
@@ -93,4 +93,4 @@ La documentazione completa è disponibile nella cartella [`docs/`](./docs/):
 
 ### Licenza
 
-Questo progetto è rilasciato sotto licenza [MIT](LICENSE). Vedi il file `LICENSE` per i dettagli.
+Questo progetto è rilasciato sotto licenza [AGPL v3](LICENSE). Vedi il file `LICENSE` per i dettagli.
