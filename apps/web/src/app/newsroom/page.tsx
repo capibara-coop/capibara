@@ -594,22 +594,11 @@ export default async function NewsletterPage({
                         <>
                           <RubricheFilters
                             columns={columns.map(c => ({ title: c.title, slug: c.slug }))}
-                            authors={allAuthors.map(a => ({ name: a.name }))}
+                            authors={allAuthors.map(a => ({ name: a.name, avatar: a.avatar }))}
                             selectedColumn={filterColumn}
                             selectedAuthor={filterAuthor}
                             selectedDate={filterDate}
                             searchQuery={searchQuery}
-                            onSearchChange={(query) => {
-                              const params = new URLSearchParams(window.location.search);
-                              params.set("rubriche", "all");
-                              if (query) {
-                                params.set("search", query);
-                              } else {
-                                params.delete("search");
-                              }
-                              params.set("rubrichePage", "1");
-                              window.history.pushState({}, "", `/newsroom?${params.toString()}`);
-                            }}
                           />
                           <div className="content-box p-8 text-center">
                             <p className="text-zinc-600 dark:text-zinc-400">
@@ -631,13 +620,14 @@ export default async function NewsletterPage({
 
                     return (
                       <>
-                        <RubricheFilters
-                          columns={columns.map(c => ({ title: c.title, slug: c.slug }))}
-                          authors={allAuthors.map(a => ({ name: a.name }))}
-                          selectedColumn={filterColumn}
-                          selectedAuthor={filterAuthor}
-                          selectedDate={filterDate}
-                        />
+                          <RubricheFilters
+                            columns={columns.map(c => ({ title: c.title, slug: c.slug }))}
+                            authors={allAuthors.map(a => ({ name: a.name, avatar: a.avatar }))}
+                            selectedColumn={filterColumn}
+                            selectedAuthor={filterAuthor}
+                            selectedDate={filterDate}
+                            searchQuery={searchQuery}
+                          />
                         
                         {filteredRubricLinksCount > 0 && (
                           <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">

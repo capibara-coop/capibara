@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter, BookOpen, User, Calendar, CalendarDays, Clock, Sparkles, Search } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { extractHeroImage } from "@/lib/api";
 
 interface Column {
   title: string;
@@ -11,6 +13,7 @@ interface Column {
 
 interface Author {
   name: string;
+  avatar?: any;
 }
 
 interface RubricheFiltersProps {
@@ -20,7 +23,6 @@ interface RubricheFiltersProps {
   selectedAuthor?: string;
   selectedDate?: string;
   searchQuery?: string;
-  onSearchChange?: (query: string) => void;
 }
 
 export default function RubricheFilters({
@@ -30,17 +32,36 @@ export default function RubricheFilters({
   selectedAuthor,
   selectedDate,
   searchQuery,
-  onSearchChange,
 }: RubricheFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Stato locale per il campo di ricerca (per evitare aggiornamenti immediati dell'URL)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery || "");
+
+  // Ref per il timeout del debouncing
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sincronizza lo stato locale quando cambia searchQuery dall'esterno (es. navigazione)
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery || "");
+  }, [searchQuery]);
+
+  // Cleanup del timeout quando il componente viene smontato
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleFilterChange = (filterType: "column" | "author" | "date", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    
+
     // Ensure we're in "all" view
     params.set("rubriche", "all");
-    
+
     if (value === "all") {
       if (filterType === "column") {
         params.delete("filterColumn");
@@ -58,12 +79,35 @@ export default function RubricheFilters({
         params.set("filterDate", value);
       }
     }
-    
+
     // Reset to first page when filtering
     params.set("rubrichePage", "1");
-    
+
     router.push(`/newsroom?${params.toString()}`);
   };
+
+  const handleSearchChange = useCallback((query: string) => {
+    // Aggiorna lo stato locale immediatamente per una risposta visiva istantanea
+    setLocalSearchQuery(query);
+
+    // Cancella il timeout precedente
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Imposta un nuovo timeout per aggiornare l'URL dopo 300ms di inattività
+    searchTimeoutRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("rubriche", "all");
+      if (query.trim()) {
+        params.set("search", query.trim());
+      } else {
+        params.delete("search");
+      }
+      params.set("rubrichePage", "1");
+      router.push(`/newsroom?${params.toString()}`);
+    }, 300);
+  }, [router, searchParams]);
 
   // Get unique authors (remove duplicates)
   const uniqueAuthors = Array.from(
@@ -80,13 +124,13 @@ export default function RubricheFilters({
     })),
   ];
 
-  // Prepare author options with icons
+  // Prepare author options with avatars
   const authorOptions = [
     { value: "all", label: "Tutti gli autori", icon: User },
     ...uniqueAuthors.map((author) => ({
       value: author.name,
       label: author.name,
-      icon: User,
+      avatar: author.avatar ? extractHeroImage(author.avatar).url : undefined,
     })),
   ];
 
@@ -117,8 +161,8 @@ export default function RubricheFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <input
               type="text"
-              value={searchQuery || ""}
-              onChange={(e) => onSearchChange?.(e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cerca nelle rubriche..."
               className="rubriche-filters-search-input w-full pl-10 pr-3 py-1.5 text-sm border rounded-md transition-colors"
             />
@@ -165,7 +209,6 @@ export default function RubricheFilters({
                 params.delete("search");
                 params.set("rubrichePage", "1");
                 router.push(`/newsroom?${params.toString()}`);
-                onSearchChange?.("");
               }}
               className="rubriche-filters-reset px-3 py-1.5 text-sm underline underline-offset-2 whitespace-nowrap"
             >
