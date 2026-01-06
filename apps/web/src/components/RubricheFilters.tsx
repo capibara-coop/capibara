@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Filter, BookOpen, User, Calendar, CalendarDays, Clock, Sparkles, Search } from "lucide-react";
+import { Filter, BookOpen, User, Calendar, CalendarDays, Clock, Sparkles, Search, Download, FileText, Database } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { extractHeroImage } from "@/lib/api";
@@ -39,6 +39,12 @@ export default function RubricheFilters({
   // Stato locale per il campo di ricerca (per evitare aggiornamenti immediati dell'URL)
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery || "");
 
+  // Stato per gestire il dropdown di esportazione
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+
+  // Stato per il caricamento dell'esportazione
+  const [isExporting, setIsExporting] = useState(false);
+
   // Ref per il timeout del debouncing
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -55,6 +61,19 @@ export default function RubricheFilters({
       }
     };
   }, []);
+
+  // Chiudi il dropdown quando si clicca fuori
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isExportDropdownOpen && !target.closest('.rubriche-filters-export') && !target.closest('.rubriche-filters-export-dropdown')) {
+        setIsExportDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isExportDropdownOpen]);
 
   const handleFilterChange = (filterType: "column" | "author" | "date", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -108,6 +127,58 @@ export default function RubricheFilters({
       router.push(`/newsroom?${params.toString()}`);
     }, 300);
   }, [router, searchParams]);
+
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    if (isExporting) return; // Previene esportazioni multiple simultanee
+
+    setIsExporting(true);
+
+    try {
+      const params = new URLSearchParams();
+      params.set("format", format);
+
+      // Aggiungi i filtri correnti
+      if (selectedColumn) params.set("filterColumn", selectedColumn);
+      if (selectedAuthor) params.set("filterAuthor", selectedAuthor);
+      if (selectedDate) params.set("filterDate", selectedDate);
+      if (searchQuery) params.set("search", searchQuery);
+
+      // Crea l'URL per il download
+      const exportUrl = `/api/export?${params.toString()}`;
+
+      // Effettua la richiesta per ottenere il file
+      const response = await fetch(exportUrl);
+
+      if (!response.ok) {
+        throw new Error(`Errore HTTP: ${response.status} ${response.statusText}`);
+      }
+
+      // Ottieni il contenuto come blob
+      const blob = await response.blob();
+
+      // Crea URL per il blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Trigger del download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `capibara-rubriche.${format}`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Libera l'URL del blob
+      URL.revokeObjectURL(blobUrl);
+
+      // Chiudi il dropdown
+      setIsExportDropdownOpen(false);
+    } catch (error) {
+      alert(`Errore durante l'esportazione: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [selectedColumn, selectedAuthor, selectedDate, searchQuery, isExporting]);
 
   // Get unique authors (remove duplicates)
   const uniqueAuthors = Array.from(
@@ -195,6 +266,58 @@ export default function RubricheFilters({
           onChange={(value) => handleFilterChange("date", value)}
           placeholder="Tutte le date"
         />
+
+        {/* Export button */}
+        <div className="flex items-end relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExportDropdownOpen(!isExportDropdownOpen);
+            }}
+            disabled={isExporting}
+            className="rubriche-filters-export px-3 py-1.5 text-sm bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-600 rounded-md flex items-center gap-2 whitespace-nowrap transition-colors"
+          >
+            {isExporting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"></div>
+                Esportazione...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Esporta
+              </>
+            )}
+          </button>
+
+          {/* Export dropdown */}
+          {isExportDropdownOpen && (
+            <div className="rubriche-filters-export-dropdown absolute top-full mt-1 right-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg z-50 min-w-[160px]">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExport("csv");
+                }}
+                disabled={isExporting}
+                className="w-full px-3 py-2 text-sm text-left hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 first:rounded-t-md"
+              >
+                <FileText className="h-4 w-4" />
+                Esporta CSV
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExport("json");
+                }}
+                disabled={isExporting}
+                className="w-full px-3 py-2 text-sm text-left hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 last:rounded-b-md"
+              >
+                <Database className="h-4 w-4" />
+                Esporta JSON
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Reset filters button */}
         {(selectedColumn || selectedAuthor || selectedDate || searchQuery) && (
