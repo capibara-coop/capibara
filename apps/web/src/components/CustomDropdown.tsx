@@ -8,6 +8,7 @@ interface DropdownOption {
   value: string;
   label: string;
   icon?: LucideIcon;
+  avatar?: string;
 }
 
 interface CustomDropdownProps {
@@ -63,9 +64,15 @@ export default function CustomDropdown({
         className="rubriche-filters-dropdown-button flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md transition-colors min-w-[160px] justify-between"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {selectedOption?.icon && (
+          {selectedOption?.avatar ? (
+            <img
+              src={selectedOption.avatar}
+              alt=""
+              className="h-4 w-4 rounded-full flex-shrink-0 object-cover"
+            />
+          ) : selectedOption?.icon ? (
             <selectedOption.icon className="h-4 w-4 flex-shrink-0" />
-          )}
+          ) : null}
           <span className="truncate">{selectedOption?.label || placeholder}</span>
         </div>
         <ChevronDown
@@ -90,7 +97,15 @@ export default function CustomDropdown({
                     : ""
                 }`}
               >
-                {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                {option.avatar ? (
+                  <img
+                    src={option.avatar}
+                    alt=""
+                    className="h-4 w-4 rounded-full flex-shrink-0 object-cover"
+                  />
+                ) : Icon ? (
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                ) : null}
                 <span className="flex-1">{option.label}</span>
               </button>
             );
