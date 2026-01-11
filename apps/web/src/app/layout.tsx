@@ -99,7 +99,9 @@ export default function RootLayout({
     <html lang="it" suppressHydrationWarning>
       <head>
         {process.env.NEXT_PUBLIC_FACEBOOK_APP_ID && (
-          <meta property="fb:app_id" content={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID} />
+          <>
+            <meta property="fb:app_id" content={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID} />
+          </>
         )}
         <script
           dangerouslySetInnerHTML={{
