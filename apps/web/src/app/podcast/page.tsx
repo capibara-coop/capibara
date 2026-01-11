@@ -55,6 +55,11 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
       images: [ogImage],
     },
+    other: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+      ? {
+          "fb:app_id": process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+        }
+      : undefined,
   };
 }
 
