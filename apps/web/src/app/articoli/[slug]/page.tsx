@@ -99,11 +99,6 @@ export async function generateMetadata({
     alternates: {
       canonical: articleUrl,
     },
-    other: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
-      ? {
-          "fb:app_id": process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-        }
-      : undefined,
   };
 }
 
