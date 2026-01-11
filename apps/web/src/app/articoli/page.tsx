@@ -54,11 +54,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Approfondimenti, analisi e articoli editoriali su lavoro, diritti, conflitti sociali e nuove forme di organizzazione.",
       images: [ogImage],
     },
-    other: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
-      ? {
-          "fb:app_id": process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-        }
-      : undefined,
   };
 }
 

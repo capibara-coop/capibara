@@ -83,11 +83,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  other: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
-    ? {
-        "fb:app_id": process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-      }
-    : undefined,
 };
 
 export default function RootLayout({
