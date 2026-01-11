@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getArticleBySlug, getStrapiMediaUrl, type Author } from "@/lib/api";
+import { getArticleBySlug, getStrapiMediaUrl, extractHeroImage, type Author } from "@/lib/api";
 import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
@@ -37,11 +37,8 @@ export async function generateMetadata({
   const seoImageUrl = article.seo?.metaImage?.data?.attributes?.url
     ? ensureAbsoluteUrl(getStrapiMediaUrl(article.seo.metaImage.data.attributes.url))
     : null;
-  const heroImageUrl = article.heroImage?.data?.attributes?.url
-    ? ensureAbsoluteUrl(getStrapiMediaUrl(article.heroImage.data.attributes.url)) || 
-      ensureAbsoluteUrl(article.heroImage.data.attributes.url)
-    : null;
-  const imageUrl = seoImageUrl || heroImageUrl || `${siteUrl}/logo_capibara.png`;
+  const { url: heroImageUrl } = extractHeroImage(article.heroImage);
+  const imageUrl = seoImageUrl || ensureAbsoluteUrl(heroImageUrl) || `${siteUrl}/logo_capibara.png`;
 
   // Usa metaTitle dal SEO se disponibile, altrimenti title
   const metaTitle = article.seo?.metaTitle || article.title;
