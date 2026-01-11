@@ -496,12 +496,14 @@ export async function getNewsletterIssueBySlug(slug: string) {
 }
 
 export async function getLatestArticles(limit = 6) {
+  const now = new Date().toISOString();
   const response = await strapiFetch<StrapiCollectionResponse<Article>>(
     "/api/articles",
     {
       query: {
         populate: "*",
         "publicationState": "live",
+        "filters[publishDate][$lte]": now,
         "pagination[pageSize]": limit,
         "sort[0]": "publishDate:desc",
       },
@@ -518,6 +520,7 @@ export async function getLatestArticles(limit = 6) {
 }
 
 export async function getArticles(page = 1, pageSize = 12) {
+  const now = new Date().toISOString();
   const response = await strapiFetch<StrapiPaginatedResponse<Article>>(
     "/api/articles",
     {
@@ -526,6 +529,7 @@ export async function getArticles(page = 1, pageSize = 12) {
         "populate[1]": "heroImage",
         "populate[2]": "tags",
         "publicationState": "live",
+        "filters[publishDate][$lte]": now,
         "pagination[page]": page,
         "pagination[pageSize]": pageSize,
         "sort[0]": "publishDate:desc",
