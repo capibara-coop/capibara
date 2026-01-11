@@ -83,6 +83,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+    ? {
+        "fb:app_id": process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+      }
+    : undefined,
 };
 
 export default function RootLayout({
@@ -93,6 +98,9 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <head>
+        {process.env.NEXT_PUBLIC_FACEBOOK_APP_ID && (
+          <meta property="fb:app_id" content={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID} />
+        )}
         <script
           dangerouslySetInnerHTML={{
             __html: `

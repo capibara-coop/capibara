@@ -72,6 +72,7 @@ apps/web/
 - `NEXTAUTH_SECRET` - Secret per NextAuth (genera con `openssl rand -base64 32`)
 - `GOOGLE_CLIENT_ID` - Client ID Google OAuth (opzionale)
 - `GOOGLE_CLIENT_SECRET` - Client Secret Google OAuth (opzionale)
+- `NEXT_PUBLIC_FACEBOOK_APP_ID` - Facebook App ID per Open Graph meta tags (opzionale ma consigliato)
 
 ### Connessione al Backend
 
