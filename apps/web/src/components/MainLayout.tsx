@@ -209,7 +209,7 @@ const NavGroup = ({
           ? "text-white"
           : "text-zinc-500"
         : isActive
-          ? "text-white"
+          ? "text-black"
           : "text-zinc-500";
 
       const lockedClasses = isDark

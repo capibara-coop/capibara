@@ -535,6 +535,24 @@ body {
   color: #a1a1aa !important; /* zinc-400 in dark mode */
 }
 
+/* Force black text for author bio in redazione cards in light mode */
+.author-bio {
+  color: #000000 !important; /* black in light mode */
+}
+
+[data-theme="dark"] .author-bio {
+  color: #a1a1aa !important; /* zinc-400 in dark mode */
+}
+
+/* Force black text for author name in redazione cards in light mode */
+.author-name {
+  color: #000000 !important; /* black in light mode */
+}
+
+[data-theme="dark"] .author-name {
+  color: #f4f4f5 !important; /* zinc-100 in dark mode */
+}
+
 /* View toggle styles */
 .view-toggle-container {
   background-color: #f4f4f5 !important; /* zinc-100 in light mode */

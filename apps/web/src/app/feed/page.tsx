@@ -86,6 +86,24 @@ export default async function FeedPage() {
                 }
               };
 
+              // Estrai nome e avatar dell'autore per gli articoli
+              const authorName = 
+                item.contentType === "article"
+                  ? ((item as any).author?.data?.attributes?.name ||
+                     (item as any).author?.attributes?.name ||
+                     (item as any).author?.name ||
+                     null)
+                  : null;
+              
+              const authorAvatarData = 
+                item.contentType === "article"
+                  ? ((item as any).author?.data?.attributes?.avatar ||
+                     (item as any).author?.attributes?.avatar ||
+                     (item as any).author?.avatar ||
+                     null)
+                  : null;
+              const { url: authorAvatarUrl } = extractHeroImage(authorAvatarData);
+
               return (
                 <ContentCard
                   key={`${item.contentType}-${item.slug}`}
@@ -125,6 +143,8 @@ export default async function FeedPage() {
                     slug: item.slug,
                     type: item.contentType === "newsletter" ? "newsroom" : item.contentType,
                     borderColor: getBorderColor(),
+                    authorName: authorName ?? undefined,
+                    authorAvatar: authorAvatarUrl ?? undefined,
                   }}
                 />
               );

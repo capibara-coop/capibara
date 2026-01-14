@@ -4,6 +4,7 @@ import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 import { Clock, Instagram, Linkedin, Globe, Music2 } from "lucide-react";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -53,8 +54,12 @@ export async function generateMetadata({
   const tagKeywords = article.tags?.data?.map((tag) => tag.attributes.name) || [];
   const keywords = seoKeywords.length > 0 ? seoKeywords : tagKeywords;
 
+  // Estrai l'autore da diverse possibili strutture
   const author: Author | undefined =
-    article.author?.data?.attributes || undefined;
+    article.author?.data?.attributes ||
+    (article.author as any)?.attributes ||
+    (article.author as any) ||
+    undefined;
 
   // Se preventIndexing è true, aggiungi noindex
   const robots = article.seo?.preventIndexing
@@ -127,8 +132,25 @@ export default async function ArticlePage({
     ? getStrapiMediaUrl(article.heroImage.data.attributes.url) || `${siteUrl}${article.heroImage.data.attributes.url}`
     : `${siteUrl}/logo_capibara.png`;
 
+  // Estrai l'autore da diverse possibili strutture
   const author: Author | undefined =
-    article.author?.data?.attributes || undefined;
+    article.author?.data?.attributes ||
+    (article.author as any)?.attributes ||
+    (article.author as any) ||
+    undefined;
+  
+  // Debug in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Article author structure:', {
+      slug,
+      hasAuthor: !!article.author,
+      author: article.author,
+      authorData: (article.author as any)?.data,
+      authorAttributes: (article.author as any)?.data?.attributes,
+      extractedAuthor: author,
+      hasAvatar: !!(author?.avatar),
+    });
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -188,6 +210,29 @@ export default async function ArticlePage({
             <h1 className="page-title text-4xl font-semibold leading-tight">
               {article.title}
             </h1>
+            {author && (
+              <div className="mt-4 flex items-center gap-2 text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">di</span>
+                {author.avatar && (
+                  <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-zinc-700 overflow-hidden flex items-center justify-center shrink-0">
+                    <Image
+                      src={extractHeroImage(author.avatar).url ?? ""}
+                      alt={author.name}
+                      width={24}
+                      height={24}
+                      className="w-full h-full object-contain translate-y-1.5 scale-110"
+                      unoptimized={extractHeroImage(author.avatar).url?.includes('localhost') || extractHeroImage(author.avatar).url?.includes('127.0.0.1')}
+                    />
+                  </div>
+                )}
+                <span className="font-medium author-name">{author.name}</span>
+              </div>
+            )}
+            {author && author.bio && (
+              <p className="mt-3 max-w-xl text-xs text-zinc-500 dark:text-zinc-400">
+                {author.bio}
+              </p>
+            )}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-zinc-500">
               {article.publishDate && (
                 <span className="uppercase tracking-wide">
@@ -204,17 +249,9 @@ export default async function ArticlePage({
                   {article.readingTime} min di lettura
                 </span>
               )}
-              {author && (
-                <span>di {author.name}</span>
-              )}
             </div>
             {author && (
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
-                {author.bio && (
-                  <p className="max-w-xl text-xs text-zinc-500 dark:text-zinc-400">
-                    {author.bio}
-                  </p>
-                )}
                 <div className="flex items-center gap-2 ml-auto">
                   {author.instagram && (
                     <a

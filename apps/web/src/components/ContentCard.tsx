@@ -16,6 +16,7 @@ type ContentTile = {
   imageAlt?: string | null;
   borderColor?: string; // Colore bordo opzionale (es: "border-indigo-500/50")
   authorName?: string | null; // Nome dell'autore (opzionale)
+  authorAvatar?: string | null; // URL dell'avatar dell'autore (opzionale)
 };
 
 const kindAccent: Record<Show["kind"], string> = {
@@ -96,7 +97,19 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
         <h3 className="content-card-title">{entry.title}</h3>
         {entry.authorName && (
           <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: 'black' }}>di</span>
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">di</span>
+            {entry.authorAvatar && (
+              <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-zinc-700 overflow-hidden flex items-center justify-center shrink-0">
+                <Image
+                  src={entry.authorAvatar}
+                  alt={entry.authorName}
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-contain translate-y-1.5 scale-110"
+                  unoptimized={entry.authorAvatar.includes('localhost') || entry.authorAvatar.includes('127.0.0.1')}
+                />
+              </div>
+            )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
               {entry.authorName}
             </span>

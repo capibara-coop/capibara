@@ -109,6 +109,14 @@ export default async function Home() {
                     (article.author as any)?.attributes?.name ||
                     (article.author as any)?.name ||
                     null;
+                  
+                  // Estrai l'avatar dell'autore
+                  const authorAvatarData = 
+                    article.author?.data?.attributes?.avatar ||
+                    (article.author as any)?.attributes?.avatar ||
+                    (article.author as any)?.avatar ||
+                    null;
+                  const { url: authorAvatarUrl } = extractHeroImage(authorAvatarData);
 
                   return (
                     <ContentCard
@@ -126,6 +134,7 @@ export default async function Home() {
                         type: "article",
                         borderColor: "indigo-500",
                         authorName: authorName,
+                        authorAvatar: authorAvatarUrl ?? undefined,
                       }}
                     />
                   );
