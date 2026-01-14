@@ -501,7 +501,10 @@ export async function getLatestArticles(limit = 6) {
     "/api/articles",
     {
       query: {
-        populate: "*",
+        "populate[0]": "author",
+        "populate[1]": "author.avatar",
+        "populate[2]": "heroImage",
+        "populate[3]": "tags",
         "publicationState": "live",
         "filters[publishDate][$lte]": now,
         "pagination[pageSize]": limit,
@@ -526,8 +529,9 @@ export async function getArticles(page = 1, pageSize = 12) {
     {
       query: {
         "populate[0]": "author",
-        "populate[1]": "heroImage",
-        "populate[2]": "tags",
+        "populate[1]": "author.avatar",
+        "populate[2]": "heroImage",
+        "populate[3]": "tags",
         "publicationState": "live",
         "filters[publishDate][$lte]": now,
         "pagination[page]": page,
@@ -562,10 +566,11 @@ export async function getArticleBySlug(slug: string) {
     {
       query: {
         "populate[0]": "author",
-        "populate[1]": "heroImage",
-        "populate[2]": "tags",
-        "populate[3]": "seo",
-        "populate[4]": "seo.metaImage",
+        "populate[1]": "author.avatar",
+        "populate[2]": "heroImage",
+        "populate[3]": "tags",
+        "populate[4]": "seo",
+        "populate[5]": "seo.metaImage",
         "publicationState": "live",
         "filters[slug][$eq]": slug,
       },

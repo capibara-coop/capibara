@@ -146,21 +146,21 @@ export default async function RedazionePage() {
                     )}
                   </div>
                   <div className="space-y-1">
-                    <h3 className="page-heading text-lg font-semibold">
+                    <h3 className="page-heading text-lg font-semibold author-name">
                       {author.name}
                     </h3>
                     {author.location && (
-                      <p className="body-text-sm text-zinc-600 dark:text-zinc-400">
+                      <p className="body-text-sm text-zinc-900 dark:text-zinc-400">
                         {author.location}
                       </p>
                     )}
                     {author.bio && (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-3">
+                      <p className="text-xs author-bio">
                         {author.bio}
                       </p>
                     )}
                     {author.columns?.data?.length ? (
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pt-1">
+                      <p className="text-[11px] text-zinc-900 dark:text-zinc-400 pt-1">
                         {author.columns.data.length === 1
                           ? "Cura 1 rubrica"
                           : `Cura ${author.columns.data.length} rubriche`}
