@@ -864,6 +864,48 @@ export async function getPublishedRubricaLinks(limit = 100) {
   return filteredLinks;
 }
 
+// Get latest rubrica links for homepage
+export async function getLatestRubricaLinks(limit = 5) {
+  return getPublishedRubricaLinks(limit);
+}
+
+// Get recently updated columns (columns with recent links)
+export async function getRecentlyUpdatedColumns(limit = 3) {
+  const columns = await getColumns();
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Filter columns that have links published in the last 7 days
+  const recentlyUpdated = columns
+    .map(column => {
+      const recentLinks = (column.links || []).filter((link: any) => {
+        if (!link.publishDate) return false;
+        const linkDate = new Date(link.publishDate);
+        return linkDate <= now && linkDate >= sevenDaysAgo;
+      });
+
+      return {
+        column,
+        latestLinkDate: recentLinks.length > 0
+          ? Math.max(...recentLinks.map((link: any) => new Date(link.publishDate).getTime()))
+          : null,
+        recentLinksCount: recentLinks.length
+      };
+    })
+    .filter(item => item.latestLinkDate !== null)
+    .sort((a, b) => {
+      if (!a.latestLinkDate && !b.latestLinkDate) return 0;
+      if (!a.latestLinkDate) return 1;
+      if (!b.latestLinkDate) return -1;
+      return b.latestLinkDate - a.latestLinkDate;
+    })
+    .slice(0, limit)
+    .map(item => item.column);
+
+  return recentlyUpdated;
+}
+
 // Search function
 export async function searchContent(query: string, page = 1, pageSize = 12) {
   if (!query || query.trim().length === 0) {
