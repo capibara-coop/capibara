@@ -760,12 +760,12 @@ export default function MainLayout({
           className={getHeaderStyles(isDark).className}
           style={getHeaderStyles(isDark).style}
         >
-          <div className="flex items-center justify-between w-full lg:justify-end">
+          <div className="flex items-center justify-between w-full lg:justify-end gap-2 min-w-0">
             {/* Logo e bottone hamburger per mobile - solo su mobile */}
-            <div className="flex items-center gap-3 lg:hidden flex-shrink-0">
+            <div className="flex items-center gap-2 lg:hidden flex-shrink-0 min-w-0">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`flex items-center justify-center w-10 h-10 rounded-xl transition ${
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition flex-shrink-0 ${
                   isDark
                     ? "bg-white/10 text-white hover:bg-white/20"
                     : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
@@ -778,16 +778,16 @@ export default function MainLayout({
                   <Menu className="h-5 w-5" />
                 )}
               </button>
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-1.5 min-w-0">
                 <Image
                   src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
                   alt="Capibara logo"
                   width={32}
                   height={32}
-                  className="h-8 w-8 rounded-lg bg-white/5 object-contain p-1"
+                  className="h-8 w-8 rounded-lg bg-white/5 object-contain p-1 flex-shrink-0"
                   priority
                 />
-                <span className={`text-base font-semibold tracking-wide ${
+                <span className={`text-sm sm:text-base font-semibold tracking-wide truncate ${
                   isDark ? "text-black" : "text-zinc-900"
                 }`}>
                   Capibara
@@ -795,7 +795,7 @@ export default function MainLayout({
               </Link>
             </div>
             {/* Mappa conflitti, Pulsanti e Dark Mode - sempre a destra */}
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 sm:gap-4 text-sm flex-shrink-0 min-w-0">
               {/* Link Mappa dei Conflitti - solo desktop */}
               <Link
                 href="/conflitti"
@@ -810,10 +810,10 @@ export default function MainLayout({
               </Link>
               {/* Pulsanti Abbonati ora e Accedi */}
               {!session && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <Link
                     href="/abbonamenti"
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    className={`hidden sm:inline-flex rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                       isDark
                         ? "bg-white/90 text-black hover:bg-white"
                         : "bg-zinc-900 text-white hover:bg-zinc-800"
@@ -823,7 +823,7 @@ export default function MainLayout({
                   </Link>
                   <Link
                     href="/login"
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    className={`rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                       isDark
                         ? "border border-black/30 text-black hover:border-black/70"
                         : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
@@ -833,7 +833,7 @@ export default function MainLayout({
                   </Link>
                 </div>
               )}
-              <div className="flex gap-3">
+              <div className="flex gap-1.5 sm:gap-3">
               {session ? (
                 <>
                   <span
@@ -845,7 +845,7 @@ export default function MainLayout({
                   </span>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className={`rounded-full px-4 py-2 text-sm transition ${
+                    className={`rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm transition whitespace-nowrap ${
                       isDark
                         ? "border border-black/30 text-black hover:border-black/60 hover:text-black"
                         : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 hover:text-zinc-900 bg-white"
@@ -861,21 +861,22 @@ export default function MainLayout({
                     const newTheme = theme === "dark" ? "light" : "dark";
                     setTheme(newTheme);
                   }}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  className={`flex items-center gap-1 sm:gap-2 rounded-full px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
                     isDark
                       ? "border border-black/30 bg-white/20 text-black hover:border-black/60 hover:bg-white/30"
                       : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-900 hover:text-zinc-900"
                   }`}
+                  aria-label={isDark ? "Passa a light mode" : "Passa a dark mode"}
                 >
                   {isDark ? (
                     <>
                       <Moon className="h-4 w-4" />
-                      <span>Dark</span>
+                      <span className="hidden sm:inline">Dark</span>
                     </>
                   ) : (
                     <>
                       <Sun className="h-4 w-4 text-amber-500" />
-                      <span>Light</span>
+                      <span className="hidden sm:inline">Light</span>
                     </>
                   )}
                 </button>
