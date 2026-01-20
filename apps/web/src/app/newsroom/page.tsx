@@ -381,9 +381,23 @@ export default async function NewsletterPage({
                 <div className="grid gap-6 sm:grid-cols-2">
                   {(selectedColumn.links || [])
                     .filter(link => !link.publishDate || new Date(link.publishDate) <= new Date())
+                    .sort((a, b) => {
+                      // Sort by publish date (newest first), null dates go to the end
+                      const dateA = a.publishDate ? new Date(a.publishDate).getTime() : null;
+                      const dateB = b.publishDate ? new Date(b.publishDate).getTime() : null;
+                      if (!dateA && !dateB) return 0;
+                      if (!dateA) return 1;
+                      if (!dateB) return -1;
+                      return dateB - dateA;
+                    })
                     .map((link, j) => (
                     <div key={j} className="content-box p-6 space-y-4 hover:border-zinc-900 transition-colors group h-full flex flex-col">
                       <div className="flex-1 space-y-2">
+                        {link.publishDate && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                            {formatDate(link.publishDate)}
+                          </span>
+                        )}
                         <h3 className="font-bold text-xl leading-tight group-hover:underline decoration-2 underline-offset-4">
                           {link.label}
                         </h3>
