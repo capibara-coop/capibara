@@ -96,6 +96,28 @@ const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+// Header styles with pastel red color
+const getHeaderStyles = (isDark: boolean) => {
+  const baseClasses = "sticky top-0 z-40 flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-12 shadow-lg";
+  
+  if (isDark) {
+    // Dark mode: pastel red
+    return {
+      className: baseClasses,
+      style: {
+        backgroundColor: "#f87171", // red-400 pastel
+      },
+    };
+  }
+  // Light mode: same pastel red as dark mode
+  return {
+    className: `${baseClasses} shadow-sm`,
+    style: {
+      backgroundColor: "#f87171", // red-400 pastel (same as dark mode)
+    },
+  };
+};
+
 const primaryNav: NavLink[] = [
   { label: "Home", icon: HomeIcon, href: "/" },
   {
@@ -447,6 +469,97 @@ export default function MainLayout({
           />
         </div>
 
+        {/* Social Links */}
+        <div className={`mt-6 border-t ${isDark ? "border-white/5" : "border-zinc-200"} pt-4`}>
+          {isSidebarCollapsed ? (
+            <div className="flex flex-col items-center gap-3">
+              <a
+                href="https://www.facebook.com/profile.php?id=61584685405654"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2 rounded-lg transition ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="Facebook"
+              >
+                <FacebookIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/capibara_coop?igsh=MWhlbWJ2M2o0djRyMA=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2 rounded-lg transition ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.tiktok.com/@capibara.media"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2 rounded-lg transition ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="TikTok"
+              >
+                <TikTokIcon className="h-5 w-5" />
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://www.facebook.com/profile.php?id=61584685405654"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="Facebook"
+                >
+                  <FacebookIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.instagram.com/capibara_coop?igsh=MWhlbWJ2M2o0djRyMA=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="Instagram"
+                >
+                  <InstagramIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@capibara.media"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="TikTok"
+                >
+                  <TikTokIcon className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
         {!isSidebarCollapsed && (
           <div className="mt-4 border-t border-white/5 pt-4 text-xs text-zinc-500">
             <div className="flex items-center justify-between mb-3">
@@ -578,7 +691,51 @@ export default function MainLayout({
                 isCollapsed={false}
               />
             </div>
-            <div className="mt-8 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
+            {/* Social Links Mobile */}
+            <div className={`mt-8 border-t ${isDark ? "border-white/5" : "border-zinc-200"} pt-4`}>
+              <div className="flex items-center gap-3 mb-4">
+                <a
+                  href="https://www.facebook.com/profile.php?id=61584685405654"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="Facebook"
+                >
+                  <FacebookIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.instagram.com/capibara_coop?igsh=MWhlbWJ2M2o0djRyMA=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="Instagram"
+                >
+                  <InstagramIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@capibara.media"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-lg transition ${
+                    isDark
+                      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }`}
+                  aria-label="TikTok"
+                >
+                  <TikTokIcon className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+            <div className="mt-4 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
               <p className="flex flex-wrap gap-2">
                 <span>Contattaci</span>
                 <span>•</span>
@@ -599,12 +756,9 @@ export default function MainLayout({
       )}
 
       <div className="flex-1">
-        <div
-          className={`flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-12 ${
-            isDark
-              ? "border-b border-white/5 bg-black/30"
-              : "border-b border-zinc-200 bg-white/70 backdrop-blur"
-          }`}
+        <div 
+          className={getHeaderStyles(isDark).className}
+          style={getHeaderStyles(isDark).style}
         >
           <div className="flex items-center justify-between w-full lg:justify-end">
             {/* Logo e bottone hamburger per mobile - solo su mobile */}
@@ -634,55 +788,57 @@ export default function MainLayout({
                   priority
                 />
                 <span className={`text-base font-semibold tracking-wide ${
-                  isDark ? "text-white" : "text-zinc-900"
+                  isDark ? "text-black" : "text-zinc-900"
                 }`}>
                   Capibara
                 </span>
               </Link>
             </div>
-            {/* Social e Dark Mode - sempre a destra */}
+            {/* Mappa conflitti, Pulsanti e Dark Mode - sempre a destra */}
             <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://www.facebook.com/profile.php?id=61584685405654"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`transition hover:opacity-70 ${
-                    isDark ? "text-zinc-300" : "text-zinc-700"
-                  }`}
-                  aria-label="Facebook"
-                >
-                  <FacebookIcon className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://www.instagram.com/capibara_coop?igsh=MWhlbWJ2M2o0djRyMA=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`transition hover:opacity-70 ${
-                    isDark ? "text-zinc-300" : "text-zinc-700"
-                  }`}
-                  aria-label="Instagram"
-                >
-                  <InstagramIcon className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://www.tiktok.com/@capibara.media"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`transition hover:opacity-70 ${
-                    isDark ? "text-zinc-300" : "text-zinc-700"
-                  }`}
-                  aria-label="TikTok"
-                >
-                  <TikTokIcon className="h-5 w-5" />
-                </a>
-              </div>
+              {/* Link Mappa dei Conflitti - solo desktop */}
+              <Link
+                href="/conflitti"
+                className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition ${
+                  isDark
+                    ? "text-black hover:bg-red-500/10 hover:text-red-700 border border-transparent hover:border-red-500/20"
+                    : "text-zinc-700 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
+                }`}
+              >
+                <Map className="h-4 w-4" />
+                <span>Mappa dei conflitti</span>
+              </Link>
+              {/* Pulsanti Abbonati ora e Accedi */}
+              {!session && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/abbonamenti"
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      isDark
+                        ? "bg-white/90 text-black hover:bg-white"
+                        : "bg-zinc-900 text-white hover:bg-zinc-800"
+                    }`}
+                  >
+                    Abbonati ora
+                  </Link>
+                  <Link
+                    href="/login"
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      isDark
+                        ? "border border-black/30 text-black hover:border-black/70"
+                        : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
+                    }`}
+                  >
+                    Accedi
+                  </Link>
+                </div>
+              )}
               <div className="flex gap-3">
               {session ? (
                 <>
                   <span
                     className={`hidden sm:inline ${
-                      isDark ? "text-zinc-300" : "text-zinc-700"
+                      isDark ? "text-black" : "text-zinc-700"
                     }`}
                   >
                     Ciao, {session.user?.name ?? "utente"}
@@ -691,7 +847,7 @@ export default function MainLayout({
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className={`rounded-full px-4 py-2 text-sm transition ${
                       isDark
-                        ? "border border-white/10 text-zinc-300 hover:border-white/40 hover:text-white"
+                        ? "border border-black/30 text-black hover:border-black/60 hover:text-black"
                         : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 hover:text-zinc-900 bg-white"
                     }`}
                   >
@@ -705,20 +861,20 @@ export default function MainLayout({
                     const newTheme = theme === "dark" ? "light" : "dark";
                     setTheme(newTheme);
                   }}
-                  className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
                     isDark
-                      ? "border border-white/10 bg-white/5 text-zinc-200 hover:border-white/40 hover:bg-white/10"
+                      ? "border border-black/30 bg-white/20 text-black hover:border-black/60 hover:bg-white/30"
                       : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-900 hover:text-zinc-900"
                   }`}
                 >
                   {isDark ? (
                     <>
-                      <Moon className="h-3.5 w-3.5" />
+                      <Moon className="h-4 w-4" />
                       <span>Dark</span>
                     </>
                   ) : (
                     <>
-                      <Sun className="h-3.5 w-3.5 text-amber-500" />
+                      <Sun className="h-4 w-4 text-amber-500" />
                       <span>Light</span>
                     </>
                   )}
@@ -727,8 +883,8 @@ export default function MainLayout({
               </div>
             </div>
           </div>
-          {/* Hide global search bar on archivio, newsroom and conflitti pages since they have their own search functionality */}
-          {pathname !== "/archivio" && !pathname.startsWith("/newsroom") && pathname !== "/conflitti" && (
+          {/* Hide global search bar on homepage, archivio, newsroom and conflitti pages since they have their own search functionality */}
+          {pathname !== "/" && pathname !== "/archivio" && !pathname.startsWith("/newsroom") && pathname !== "/conflitti" && (
             <div className="flex justify-center">
               <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-24">
                 <form

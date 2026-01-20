@@ -209,6 +209,7 @@ type VideoEpisode = EpisodeBase & {
   durationSeconds?: number | null;
   // "horizontal" (16:9) o "vertical" (9:16), gestito da Strapi
   videoOrientation?: "horizontal" | "vertical" | null;
+  body?: string | null;
 };
 
 type PodcastEpisode = EpisodeBase & {

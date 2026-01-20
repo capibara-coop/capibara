@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getVideoEpisodeBySlug, getStrapiMediaUrl, extractHeroImage } from "@/lib/api";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { toYoutubeEmbedUrl } from "@/lib/youtube";
+import { toYoutubeEmbedUrl, getYoutubeThumbnailUrl } from "@/lib/youtube";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -166,21 +166,50 @@ export default async function VideoEpisodePage({
 
           {episode.synopsis && <p className="article-excerpt">{episode.synopsis}</p>}
 
-          {embedSrc && (
-            <div
-              className={`overflow-hidden rounded-2xl bg-black ${
-                isVertical ? "mx-auto max-w-sm aspect-[9/16]" : "w-full aspect-video"
-              }`}
-            >
-              <iframe
-                // Se è un URL YouTube lo convertiamo a embed, altrimenti usiamo l'URL così com'è (es. Cloudinary embed/player)
-                src={embedSrc}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          )}
+          {episode.videoUrl && (() => {
+            const isYouTube = toYoutubeEmbedUrl(episode.videoUrl) !== null;
+            
+            // Se è YouTube, usa iframe ma senza scroll
+            if (isYouTube && embedSrc) {
+              return (
+                <div
+                  className={`relative overflow-hidden rounded-2xl bg-black ${
+                    isVertical ? "mx-auto max-w-sm aspect-[9/16]" : "w-full aspect-video"
+                  }`}
+                >
+                  <iframe
+                    src={embedSrc}
+                    className="absolute inset-0 h-full w-full border-0"
+                    style={{ 
+                      overflow: 'hidden',
+                      border: 'none'
+                    }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    scrolling="no"
+                  />
+                </div>
+              );
+            }
+            
+            // Se è un file video diretto, usa elemento video HTML5
+            return (
+              <div
+                className={`overflow-hidden rounded-2xl bg-black ${
+                  isVertical ? "mx-auto max-w-sm aspect-[9/16]" : "w-full aspect-video"
+                }`}
+              >
+                <video
+                  src={episode.videoUrl}
+                  controls
+                  preload="metadata"
+                  className="h-full w-full"
+                >
+                  Il tuo browser non supporta il tag video.
+                </video>
+              </div>
+            );
+          })()}
 
           {episode.summary && (
             <div className="article-prose">

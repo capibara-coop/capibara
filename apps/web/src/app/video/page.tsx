@@ -1,6 +1,7 @@
 import { getVideoEpisodes, getLatestVideoEpisodes, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
+import { getVideoPreviewImageUrl } from "@/lib/youtube";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -90,8 +91,11 @@ export default async function VideoPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "video";
                 const accent = getKindAccent(showKind);
 
-                const { url: imageUrl, alt: imageAltRaw } = extractHeroImage(episode.heroImage);
-                const imageAlt = imageAltRaw ?? episode.title;
+                // Usa sempre il primo frame del video (thumbnail YouTube) se disponibile, altrimenti hero image
+                const previewImageUrl = getVideoPreviewImageUrl(episode.videoUrl);
+                const { url: heroImageUrl, alt: imageAltRaw } = extractHeroImage(episode.heroImage);
+                const imageUrl = previewImageUrl ?? heroImageUrl ?? undefined;
+                const imageAlt = imageAltRaw ?? episode.title ?? "Video";
 
                 return (
                   <ContentCard
@@ -102,7 +106,7 @@ export default async function VideoPage({
                       summary: episode.synopsis ?? episode.summary ?? "",
                       tag: "Video",
                       accent,
-                      imageUrl: imageUrl ?? undefined,
+                      imageUrl,
                       imageAlt,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
