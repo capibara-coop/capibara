@@ -7,6 +7,7 @@ import {
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
+import { getVideoPreviewImageUrl } from "@/lib/youtube";
 import type { Show } from "@/lib/api";
 
 export default async function FeedPage() {
@@ -131,6 +132,18 @@ export default async function FeedPage() {
                         ? "from-blue-500/30 via-indigo-500/20 to-purple-900/40"
                         : accent,
                     ...(() => {
+                      // Per i video, usa sempre il primo frame (thumbnail YouTube) se disponibile, altrimenti hero image
+                      if (item.contentType === "video" && (item as any).videoUrl) {
+                        const previewImageUrl = getVideoPreviewImageUrl((item as any).videoUrl);
+                        const { url: heroImageUrl, alt: heroImageAlt } = extractHeroImage(
+                          (item as any).heroImage,
+                        );
+                        return {
+                          imageUrl: previewImageUrl ?? heroImageUrl ?? undefined,
+                          imageAlt: heroImageAlt ?? item.title ?? "Video",
+                        };
+                      }
+                      // Per altri contenuti, usa hero image
                       const { url, alt } = extractHeroImage(
                         (item as any).heroImage,
                       );
