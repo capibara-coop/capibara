@@ -357,11 +357,11 @@ body {
 
 /* Search input */
 [data-theme="dark"] .search-input {
-  @apply w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none;
+  @apply w-full bg-transparent text-sm text-black placeholder:text-zinc-500 focus:outline-none;
 }
 
 [data-theme="light"] .search-input {
-  @apply w-full bg-transparent text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none;
+  @apply w-full bg-transparent text-sm text-black placeholder:text-zinc-500 focus:outline-none;
 }
 
 /* Search box container */
@@ -626,6 +626,33 @@ body {
   opacity: 0.8;
   transform: scale(1.2);
 }
+
+/* Card numerate del Manifesto tecnologico */
+[data-theme="light"] .tech-manifesto-card {
+  border-radius: 1rem;
+  border-width: 1px;
+  border-color: rgb(228 228 231); /* zinc-200 */
+  background-color: #ffffff;
+  padding: 1rem;
+}
+
+[data-theme="dark"] .tech-manifesto-card {
+  border-radius: 1rem;
+  border-width: 1px;
+  border-color: rgb(63 63 70); /* zinc-700 */
+  background-color: #000000; /* nero pieno */
+  padding: 1rem;
+}
+
+/* Box "I nostri assi politici" – tema chiaro/scuro esplicito */
+[data-theme="light"] .tech-axes-box {
+  @apply rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm;
+}
+
+[data-theme="dark"] .tech-axes-box {
+  @apply rounded-2xl border border-red-600 bg-black p-4 shadow-[0_18px_55px_rgba(0,0,0,0.65)];
+}
+
 
 /* Badge style for rubrica list rubrica name */
 .rubrica-list-rubrica-badge {

@@ -100,7 +100,10 @@ export default async function VideoEpisodePage({
   const { url: imageUrl } = extractHeroImage(episode.heroImage);
   const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
 
-  const isVertical = episode.videoOrientation === "vertical";
+  // Considera verticale sia se marcato in Strapi, sia se è uno Shorts di YouTube
+  const isVertical =
+    episode.videoOrientation === "vertical" ||
+    (episode.videoUrl?.includes("/shorts/") ?? false);
   const embedSrc = toYoutubeEmbedUrl(episode.videoUrl) ?? episode.videoUrl ?? undefined;
 
   const jsonLd = {
