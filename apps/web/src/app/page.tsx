@@ -20,6 +20,45 @@ import type { Metadata } from "next";
 const LATEST_RUBRICA_LINKS_DISPLAY = 6;
 const RECENT_LINKS_PREVIEW = 3;
 
+// Palette di colori per distinguere visivamente le rubriche (valori HEX, usati via inline style
+// per avere la precedenza sui border definiti a livello di tema in .content-box)
+const RUBRICA_BORDER_COLORS = [
+  "#fbbf24", // amber-400
+  "#34d399", // emerald-400
+  "#38bdf8", // sky-400
+  "#e879f9", // fuchsia-400
+  "#fb7185", // rose-400
+  "#a855f7", // violet-500
+  "#f59e0b", // amber-500
+  "#10b981", // emerald-500
+  "#06b6d4", // cyan-500
+  "#8b5cf6", // violet-500
+  "#ec4899", // pink-500
+  "#ef4444", // red-500
+  "#14b8a6", // teal-500
+  "#6366f1", // indigo-500
+] as const;
+
+const getRubricaBorderColor = (
+  slugOrTitle: string | null | undefined
+): string | null => {
+  if (!slugOrTitle) {
+    return null;
+  }
+
+  // Genera un hash più robusto basato sullo slug/titolo della rubrica
+  // Usa un algoritmo di hash più distribuito per evitare collisioni
+  let hash = 0;
+  for (let i = 0; i < slugOrTitle.length; i++) {
+    const char = slugOrTitle.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  // Usa il valore assoluto per evitare indici negativi
+  return RUBRICA_BORDER_COLORS[Math.abs(hash) % RUBRICA_BORDER_COLORS.length];
+};
+
 export const metadata: Metadata = {
   title: "Home",
   description:
@@ -49,8 +88,8 @@ export default async function Home() {
     getLatestVideoEpisodes(1), // Ultimo video per la sezione dedicata
     getLatestPodcastEpisodes(4),
     getPremiumNewsletterIssues(3),
-    getLatestArticles(3),
-    getLatestRubricaLinks(5),
+    getLatestArticles(4),
+    getLatestRubricaLinks(10), // Recupera più link per assicurare diversità tra rubriche
     getRecentlyUpdatedColumns(3),
   ]);
 
@@ -61,10 +100,57 @@ export default async function Home() {
   const validPremiumLetters = premiumLetters.filter((ep) => ep != null);
   const validArticles = articles.filter((art) => art != null);
 
+  // Diversifica i link delle rubriche per assicurarsi che provengano da rubriche diverse
+  const diversifiedRubricaLinks = (() => {
+    if (latestRubricaLinks.length === 0) return [];
+    
+    // Raggruppa i link per rubrica
+    const linksByRubrica = new Map<string, typeof latestRubricaLinks>();
+    latestRubricaLinks.forEach((link) => {
+      const rubricaKey = link.column?.slug ?? link.column?.title ?? "unknown";
+      if (!linksByRubrica.has(rubricaKey)) {
+        linksByRubrica.set(rubricaKey, []);
+      }
+      linksByRubrica.get(rubricaKey)!.push(link);
+    });
+
+    // Prendi al massimo 1 link per rubrica, fino a raggiungere 4 link totali
+    const result: typeof latestRubricaLinks = [];
+    const maxLinks = 4;
+    const rubricas = Array.from(linksByRubrica.keys());
+    
+    // Prima passata: 1 link per rubrica
+    for (const rubricaKey of rubricas) {
+      if (result.length >= maxLinks) break;
+      const links = linksByRubrica.get(rubricaKey)!;
+      if (links.length > 0) {
+        result.push(links[0]);
+      }
+    }
+    
+    // Se non abbiamo raggiunto il limite, aggiungiamo un secondo link dalle rubriche che ne hanno più di uno
+    if (result.length < maxLinks) {
+      for (const rubricaKey of rubricas) {
+        if (result.length >= maxLinks) break;
+        const links = linksByRubrica.get(rubricaKey)!;
+        // Conta quanti link di questa rubrica abbiamo già aggiunto
+        const alreadyAdded = result.filter(link => 
+          (link.column?.slug ?? link.column?.title ?? "unknown") === rubricaKey
+        ).length;
+        // Se c'è ancora spazio e questa rubrica ha più link, aggiungine uno
+        if (alreadyAdded === 1 && links.length > 1) {
+          result.push(links[1]);
+        }
+      }
+    }
+    
+    return result.slice(0, maxLinks);
+  })();
+
   return (
     <MainLayout>
       {/* Sezione Newsroom - Ultimi link dalle rubriche - PRIMA SEZIONE */}
-          {latestRubricaLinks.length > 0 && (
+          {diversifiedRubricaLinks.length > 0 && (
             <section className="space-y-6">
               <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
                 <div>
@@ -84,13 +170,23 @@ export default async function Home() {
                 </Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {latestRubricaLinks.slice(0, 4).map((link, index) => {
+                {diversifiedRubricaLinks.map((link, index) => {
                   const columnTitle = link.column?.title || "Rubrica";
-                  
+                  const rubricaKey = link.column?.slug ?? columnTitle;
+                  const borderColor = getRubricaBorderColor(rubricaKey);
+
                   return (
                     <article
                       key={`${link.column?.slug}-${index}`}
-                      className="content-box p-4 space-y-3 hover:border-zinc-900 dark:hover:border-zinc-100 transition-all duration-200 group min-w-0"
+                      className="content-box p-4 space-y-3 transition-all duration-200 group min-w-0 hover:border-zinc-900 dark:hover:border-zinc-100"
+                      style={
+                        borderColor
+                          ? {
+                              borderColor,
+                              borderWidth: "2px",
+                            }
+                          : undefined
+                      }
                     >
                       <div className="space-y-2">
                         <div className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 line-clamp-1">
@@ -273,7 +369,10 @@ export default async function Home() {
                     )}
                   </div>
                   {latestVideoEpisode.videoUrl && (() => {
-                    const isVertical = latestVideoEpisode.videoOrientation === "vertical";
+                    // Considera verticale sia se marcato in Strapi, sia se è uno Shorts di YouTube
+                    const isVertical =
+                      latestVideoEpisode.videoOrientation === "vertical" ||
+                      (latestVideoEpisode.videoUrl?.includes("/shorts/") ?? false);
                     const isYouTube = toYoutubeEmbedUrl(latestVideoEpisode.videoUrl) !== null;
                     const embedSrc = toYoutubeEmbedUrl(latestVideoEpisode.videoUrl) ?? latestVideoEpisode.videoUrl ?? undefined;
                     

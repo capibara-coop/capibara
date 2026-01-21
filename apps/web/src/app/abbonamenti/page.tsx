@@ -16,54 +16,52 @@ type PricingPlan = {
 
 const plans: PricingPlan[] = [
   {
-    name: "Base",
-    description: "Per chi vuole iniziare",
+    name: "Supporter",
+    description: "Per chi vuole sostenere Capibara e restare aggiornato",
     price: "9",
     period: "mese",
     icon: <Zap className="h-6 w-6" />,
     features: [
-      "Accesso a tutti i video pubblici",
-      "Accesso a tutti i podcast pubblici",
-      "Newsletter settimanale",
-      "Supporto via email",
+      "Sostieni il giornalismo indipendente di Capibara",
+      "Accesso a tutti i video e podcast pubblici senza pubblicità invasiva",
+      "Newsletter settimanale con selezione dei contenuti",
+      "Contribuisci al mantenimento dell’infrastruttura tecnologica etica",
     ],
-    cta: "Inizia ora",
+    cta: "Diventa Supporter",
     accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
   },
   {
-    name: "Premium",
-    description: "Il piano più popolare",
+    name: "Comunità",
+    description: "Il piano per entrare davvero nell’ecosistema Capibara",
     price: "19",
     period: "mese",
     icon: <Star className="h-6 w-6" />,
     features: [
-      "Tutto del piano Base",
-      "Accesso a contenuti premium",
-      "Newsletter esclusive",
-      "Articoli approfonditi",
-      "Accesso anticipato ai nuovi contenuti",
-      "Supporto prioritario",
+      "Tutto del piano Supporter",
+      "Accesso ai contenuti premium (inchieste, newsletter, articoli lunghi)",
+      "Newsletter esclusive per abbonati",
+      "Approfondimenti teorici e strumenti pratici per organizzarsi",
+      "Accesso anticipato ai nuovi progetti editoriali e tecnologici",
+      "Contribuisci in modo diretto allo sviluppo del nostro Manifesto tecnologico",
     ],
-    cta: "Scegli Premium",
+    cta: "Scegli Comunità",
     popular: true,
     accent: "from-amber-500/30 via-orange-500/20 to-red-900/40",
   },
   {
-    name: "Pro",
-    description: "Per i veri appassionati",
+    name: "Sostenitore",
+    description: "Per chi può e vuole spingere di più il progetto",
     price: "39",
     period: "mese",
     icon: <Crown className="h-6 w-6" />,
     features: [
-      "Tutto del piano Premium",
-      "Contenuti esclusivi Pro",
-      "Accesso a eventi live",
-      "Community privata",
-      "Contenuti scaricabili",
-      "Merchandise esclusivo",
-      "Supporto dedicato 24/7",
+      "Tutto del piano Comunità",
+      "Contributo maggiorato a sostegno di inchieste lunghe e progetti speciali",
+      "Aiuti a finanziare infrastrutture libere, open source e non legate alle industrie di guerra",
+      "Sostieni la sperimentazione di nuovi strumenti tecnologici al servizio di movimenti e comunità",
+      "Se lo desideri, verrai riconosciuto come sostenitore principale del progetto (in forme che stiamo costruendo insieme)",
     ],
-    cta: "Diventa Pro",
+    cta: "Diventa Sostenitore",
     accent: "from-purple-500/30 via-fuchsia-500/20 to-pink-900/40",
   },
 ];
@@ -73,9 +71,12 @@ export default function AbbonamentiPage() {
     <MainLayout>
       <div className="space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="page-title text-5xl font-semibold">Scegli il tuo abbonamento</h1>
+          <h1 className="page-title text-5xl font-semibold">
+            Abbonati e dai forza al nostro giornalismo e alla nostra tecnologia
+          </h1>
           <p className="body-text-lg text-xl max-w-2xl mx-auto">
-            Accedi a contenuti esclusivi, approfondimenti e una community di appassionati
+            Il tuo abbonamento finanzia inchieste, podcast, video e un&apos;infrastruttura
+            tecnologica coerente con il nostro Manifesto: aperta, etica e al servizio delle persone.
           </p>
         </div>
 

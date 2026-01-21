@@ -4,6 +4,7 @@ import React from "react";
 import {
   Archive,
   BadgeEuro,
+  Cpu,
   Headphones,
   Home as HomeIcon,
   List,
@@ -12,7 +13,6 @@ import {
   Map,
   MessageCircle,
   PlayCircle,
-  Search,
   Star,
   Timer,
   Sun,
@@ -96,24 +96,34 @@ const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-// Header styles with pastel red color
+// Header styles con gradiente pastel red, usato in una barra "floating"
+// Fluent Design: maggiore trasparenza con effetto glassmorphism
 const getHeaderStyles = (isDark: boolean) => {
-  const baseClasses = "sticky top-0 z-40 flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-12 shadow-lg";
-  
+  // Solo stile dell'header; il posizionamento (fixed) è gestito dal wrapper esterno.
+  const baseClasses =
+    "flex flex-col gap-6 w-full py-6 " +
+    "rounded-3xl border backdrop-blur-xl border-white/10";
+
   if (isDark) {
-    // Dark mode: pastel red
+    // Dark mode: pastel red trasparente con gradiente fluente e glassmorphism
     return {
       className: baseClasses,
       style: {
-        backgroundColor: "#f87171", // red-400 pastel
+        background: "linear-gradient(135deg, rgba(248, 113, 113, 0.7) 0%, rgba(251, 146, 60, 0.65) 100%)", // red-400 to orange-400 gradient con maggiore trasparenza
+        boxShadow: "0 8px 32px 0 rgba(248, 113, 113, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 1px 0 0 rgba(255, 255, 255, 0.1) inset",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
       },
     };
   }
-  // Light mode: same pastel red as dark mode
+  // Light mode: gradiente trasparente con effetto glassmorphism
   return {
-    className: `${baseClasses} shadow-sm`,
+    className: `${baseClasses}`,
     style: {
-      backgroundColor: "#f87171", // red-400 pastel (same as dark mode)
+      background: "linear-gradient(135deg, rgba(248, 113, 113, 0.75) 0%, rgba(251, 146, 60, 0.7) 100%)", // red-400 to orange-400 gradient con trasparenza
+      boxShadow: "0 8px 32px 0 rgba(248, 113, 113, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 1px 0 0 rgba(255, 255, 255, 0.3) inset",
+      backdropFilter: "blur(20px) saturate(180%)",
+      WebkitBackdropFilter: "blur(20px) saturate(180%)",
     },
   };
 };
@@ -161,6 +171,7 @@ const primaryNav: NavLink[] = [
 const utilityNav: NavLink[] = [
   { label: "Chi siamo", icon: CapibaraLogoIcon, href: "/chi-siamo" },
   { label: "Redazione", icon: UserCircle, href: "/chi-siamo/redazione" },
+  { label: "Tecnologia", icon: Cpu, href: "/tecnologia" },
   { label: "Abbonamenti", icon: BadgeEuro, href: "/abbonamenti" },
   { label: "Partner", icon: Users, href: "/partner" },
 ];
@@ -428,6 +439,11 @@ export default function MainLayout({
                 width={isSidebarCollapsed ? 48 : 80}
                 height={isSidebarCollapsed ? 36 : 60}
                 className={`${isSidebarCollapsed ? 'h-9 w-12' : 'h-15 w-20'} ${isSidebarCollapsed ? 'rounded-md' : 'rounded-2xl'} bg-white/5 object-contain ${isSidebarCollapsed ? 'p-1' : 'p-2'}`}
+                style={{
+                  filter: isDark 
+                    ? 'brightness(1.1) saturate(1.2) hue-rotate(-5deg)' 
+                    : 'brightness(0.95) saturate(1.1) hue-rotate(-5deg)'
+                }}
                 priority
               />
               {!isSidebarCollapsed && (
@@ -756,58 +772,67 @@ export default function MainLayout({
       )}
 
       <div className="flex-1">
-        <div 
-          className={getHeaderStyles(isDark).className}
-          style={getHeaderStyles(isDark).style}
-        >
-          <div className="flex items-center justify-between w-full lg:justify-end gap-2 min-w-0">
-            {/* Logo e bottone hamburger per mobile - solo su mobile */}
-            <div className="flex items-center gap-2 lg:hidden flex-shrink-0 min-w-0">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`flex items-center justify-center w-10 h-10 rounded-xl transition flex-shrink-0 ${
-                  isDark
-                    ? "bg-white/10 text-white hover:bg-white/20"
-                    : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                }`}
-                aria-label="Apri menu"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-              <Link href="/" className="flex items-center gap-1.5 min-w-0">
-                <Image
-                  src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
-                  alt="Capibara logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 rounded-lg bg-white/5 object-contain p-1 flex-shrink-0"
-                  priority
-                />
-                <span className={`text-sm sm:text-base font-semibold tracking-wide truncate ${
-                  isDark ? "text-black" : "text-zinc-900"
-                }`}>
-                  Capibara
-                </span>
-              </Link>
-            </div>
-            {/* Mappa conflitti, Pulsanti e Dark Mode - sempre a destra */}
-            <div className="flex items-center gap-2 sm:gap-4 text-sm flex-shrink-0 min-w-0">
+        {/* HEADER FLOATING FIXED */}
+        <div className={`pointer-events-none fixed top-4 z-40 ${isSidebarCollapsed ? 'left-16 lg:left-16' : 'left-0 lg:left-72'} right-0`}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-24">
+            <div
+              className={getHeaderStyles(isDark).className}
+              style={getHeaderStyles(isDark).style}
+            >
+              {/* Padding interno per distanziare gli elementi dal bordo arrotondato */}
+              <div className="w-full px-4 sm:px-6 lg:px-8 pointer-events-auto">
+          <div className="flex items-center justify-between w-full gap-2 min-w-0">
+            {/* Lato sinistro: Logo e hamburger su mobile, Mappa conflitti su desktop */}
+            <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+              {/* Logo e bottone hamburger per mobile - solo su mobile */}
+              <div className="flex items-center gap-2 lg:hidden">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className={`flex items-center justify-center w-10 h-10 rounded-xl transition flex-shrink-0 ${
+                    isDark
+                      ? "bg-white/10 text-white hover:bg-white/20"
+                      : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                  }`}
+                  aria-label="Apri menu"
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </button>
+                <Link href="/" className="flex items-center gap-1.5 min-w-0">
+                  <Image
+                    src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+                    alt="Capibara logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-lg bg-white/5 object-contain p-1 flex-shrink-0"
+                    priority
+                  />
+                  <span className={`text-sm sm:text-base font-semibold tracking-wide truncate ${
+                    isDark ? "text-black" : "text-zinc-900"
+                  }`}>
+                    Capibara
+                  </span>
+                </Link>
+              </div>
               {/* Link Mappa dei Conflitti - solo desktop */}
               <Link
                 href="/conflitti"
-                className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition ${
+                className={`hidden lg:flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                   isDark
-                    ? "text-black hover:bg-red-500/10 hover:text-red-700 border border-transparent hover:border-red-500/20"
-                    : "text-zinc-700 hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
+                    ? "border border-black/30 text-black hover:border-black/70"
+                    : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
                 }`}
               >
                 <Map className="h-4 w-4" />
                 <span>Mappa dei conflitti</span>
               </Link>
+            </div>
+            
+            {/* Lato destro: Pulsanti e Dark Mode */}
+            <div className="flex items-center gap-2 sm:gap-4 text-sm flex-shrink-0 min-w-0">
               {/* Pulsanti Abbonati ora e Accedi */}
               {!session && (
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -883,44 +908,21 @@ export default function MainLayout({
               )}
               </div>
             </div>
-          </div>
-          {/* Hide global search bar on homepage, archivio, newsroom and conflitti pages since they have their own search functionality */}
-          {pathname !== "/" && pathname !== "/archivio" && !pathname.startsWith("/newsroom") && pathname !== "/conflitti" && (
-            <div className="flex justify-center">
-              <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-24">
-                <form
-                  action="/archivio"
-                  method="get"
-                  className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 ${
-                    isDark
-                      ? "border border-white/10 bg-white/5"
-                      : "border border-zinc-300 bg-white"
-                  }`}
-                >
-                  <Search
-                    className={`h-4 w-4 ${
-                      isDark ? "text-zinc-500" : "text-zinc-400"
-                    }`}
-                  />
-                  <input
-                    name="q"
-                    type="search"
-                    className={`w-full bg-transparent text-sm focus:outline-none ${
-                      isDark
-                        ? "text-white placeholder:text-zinc-500"
-                        : "text-zinc-900 placeholder:text-zinc-400"
-                    }`}
-                    placeholder="Cerca episodi, podcast o newsroom"
-                  />
-                </form>
+            </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
-        <main className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-24">
-          {children}
-        </main>
+        {/* SPACER: altezza ~ header, per evitare sovrapposizione nella posizione iniziale */}
+        <div className="h-32 sm:h-36 lg:h-40" />
+
+        {/* Contenuto principale, allineato al container dell'header */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-24">
+          <main className="flex flex-col gap-10 pb-10">
+            {children}
+          </main>
+        </div>
       </div>
 
       {/* Modale di benvenuto */}
