@@ -23,6 +23,7 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  FileSignature,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -156,6 +157,13 @@ const primaryNav: NavLink[] = [
     href: "/video",
     color: "bg-purple-500/20 border-purple-500/50 text-white",
     colorLight: "bg-purple-100 border-purple-500 text-purple-900"
+  },
+  { 
+    label: "Petizioni", 
+    icon: FileSignature, 
+    href: "/petizioni",
+    color: "bg-orange-500/20 border-orange-500/50 text-white",
+    colorLight: "bg-orange-100 border-orange-500 text-orange-900"
   },
   { label: "Archivio", icon: Archive, href: "/archivio" },
   {

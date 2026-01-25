@@ -101,9 +101,12 @@ export default async function PetizioniPage({
                 const { url: authorAvatarUrl } = extractHeroImage(authorAvatarData);
 
                 // Calcola la percentuale di completamento
-                const targetSignatures = petition.targetSignatures || 1000;
-                const currentSignatures = petition.currentSignatures || 0;
-                const percentage = Math.min(100, Math.round((currentSignatures / targetSignatures) * 100));
+                // Converti a numero per gestire correttamente valori grandi
+                const targetSignatures = Number(petition.targetSignatures) || 1000;
+                const currentSignatures = Number(petition.currentSignatures) || 0;
+                const percentage = targetSignatures > 0 
+                  ? Math.min(100, Math.round((currentSignatures / targetSignatures) * 100))
+                  : 0;
 
                 return (
                   <Link
@@ -142,12 +145,12 @@ export default async function PetizioniPage({
                       )}
                       {/* Barra di progresso firme */}
                       <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                            {currentSignatures.toLocaleString()} firme
+                        <div className="flex items-center justify-between text-xs gap-2">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate">
+                            {currentSignatures.toLocaleString('it-IT')} firme
                           </span>
-                          <span className="text-zinc-500 dark:text-zinc-400">
-                            {targetSignatures.toLocaleString()} obiettivo
+                          <span className="text-zinc-500 dark:text-zinc-400 shrink-0">
+                            {targetSignatures.toLocaleString('it-IT')} obiettivo
                           </span>
                         </div>
                         <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2 overflow-hidden">
