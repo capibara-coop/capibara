@@ -129,9 +129,12 @@ export default async function PetitionPage({
     undefined;
 
   // Calcola la percentuale di completamento
-  const targetSignatures = petition.targetSignatures || 1000;
-  const currentSignatures = petition.currentSignatures || 0;
-  const percentage = Math.min(100, Math.round((currentSignatures / targetSignatures) * 100));
+  // Converti a numero per gestire correttamente valori grandi
+  const targetSignatures = Number(petition.targetSignatures) || 1000;
+  const currentSignatures = Number(petition.currentSignatures) || 0;
+  const percentage = targetSignatures > 0 
+    ? Math.min(100, Math.round((currentSignatures / targetSignatures) * 100))
+    : 0;
 
   // Verifica se la petizione è scaduta
   const isExpired = petition.expiryDate 
@@ -245,17 +248,17 @@ export default async function PetitionPage({
 
           {/* Barra di progresso firme */}
           <div className="content-box p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <Users className="h-5 w-5 text-zinc-600 dark:text-zinc-400 shrink-0" />
                 <span className="text-lg font-semibold">Firme raccolte</span>
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                  {currentSignatures.toLocaleString()}
+                  {currentSignatures.toLocaleString('it-IT')}
                 </div>
                 <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                  di {targetSignatures.toLocaleString()} obiettivo
+                  di {targetSignatures.toLocaleString('it-IT')} obiettivo
                 </div>
               </div>
             </div>
@@ -265,12 +268,12 @@ export default async function PetitionPage({
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm gap-4">
               <span className="text-zinc-600 dark:text-zinc-400">
                 {percentage}% completato
               </span>
-              <span className="text-zinc-500 dark:text-zinc-400">
-                Mancano {Math.max(0, targetSignatures - currentSignatures).toLocaleString()} firme
+              <span className="text-zinc-500 dark:text-zinc-400 shrink-0">
+                Mancano {Math.max(0, targetSignatures - currentSignatures).toLocaleString('it-IT')} firme
               </span>
             </div>
             {petition.externalUrl && petition.isActive && !isExpired && (
