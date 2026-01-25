@@ -1,3 +1,3 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreService('api::petition.petition');
+export default factories.createCoreService('api::petition.petition' as any);
