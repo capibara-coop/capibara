@@ -1,0 +1,94 @@
+{
+  "kind": "collectionType",
+  "collectionName": "events",
+  "info": {
+    "singularName": "event",
+    "pluralName": "events",
+    "displayName": "Event",
+    "description": "Eventi e appuntamenti del calendario"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    },
+    "content-type-builder": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "required": true
+    },
+    "body": {
+      "type": "richtext"
+    },
+    "heroImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "startDate": {
+      "type": "datetime",
+      "required": true,
+      "description": "Data e ora di inizio dell'evento"
+    },
+    "endDate": {
+      "type": "datetime",
+      "description": "Data e ora di fine dell'evento (opzionale per eventi di un solo giorno)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Luogo dell'evento (es: Milano, Roma, ecc.)"
+    },
+    "address": {
+      "type": "text",
+      "description": "Indirizzo completo della sede dell'evento"
+    },
+    "isOnline": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se l'evento si svolge online"
+    },
+    "onlineUrl": {
+      "type": "string",
+      "description": "Link per partecipare all'evento online (Zoom, Meet, ecc.)"
+    },
+    "organizer": {
+      "type": "string",
+      "description": "Chi organizza l'evento"
+    },
+    "externalUrl": {
+      "type": "string",
+      "description": "URL esterno per iscrizione o maggiori informazioni"
+    },
+    "isFeatured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Evento in evidenza"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag",
+      "inversedBy": "events"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}
