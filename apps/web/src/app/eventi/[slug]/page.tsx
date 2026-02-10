@@ -387,7 +387,7 @@ export default async function EventDetailPage({
 
           {/* Share */}
           <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6">
-            <ShareButton url={eventUrl} title={event.title} />
+            <ShareButton url={eventUrl} title={event.title} text={event.description || event.title} />
           </div>
         </article>
       </div>
