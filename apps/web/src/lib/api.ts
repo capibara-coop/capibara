@@ -374,6 +374,39 @@ type Petition = {
   seo?: SeoComponent | null;
 };
 
+type Event = {
+  title: string;
+  slug: string;
+  description?: string | null;
+  body?: string | null;
+  startDate: string;
+  endDate?: string | null;
+  location?: string | null;
+  address?: string | null;
+  isOnline?: boolean;
+  onlineUrl?: string | null;
+  organizer?: string | null;
+  externalUrl?: string | null;
+  isFeatured?: boolean;
+  heroImage?: {
+    data: {
+      attributes: {
+        url: string;
+        alternativeText?: string | null;
+      };
+    };
+  } | null;
+  tags?: {
+    data: Array<{
+      attributes: {
+        name: string;
+        slug: string;
+      };
+    }>;
+  } | null;
+  seo?: SeoComponent | null;
+};
+
 export async function getFeaturedShows(limit = 4) {
   const response = await strapiFetch<StrapiCollectionResponse<Show>>(
     "/api/shows",
@@ -1201,6 +1234,119 @@ export async function getPetitionBySlug(slug: string) {
   return petition?.attributes ?? petition ?? null;
 }
 
+// ─── Events ────────────────────────────────────────────
+
+export async function getEvents(page = 1, pageSize = 12) {
+  const response = await strapiFetch<StrapiPaginatedResponse<Event>>(
+    "/api/events",
+    {
+      query: {
+        "populate[0]": "heroImage",
+        "populate[1]": "tags",
+        "publicationState": "live",
+        "pagination[page]": page,
+        "pagination[pageSize]": pageSize,
+        "sort[0]": "startDate:asc",
+      },
+      revalidate: 300,
+    },
+  );
+
+  const events = (response.data?.map((item) => {
+    if (item.attributes) {
+      return item.attributes;
+    }
+    return item;
+  }) ?? []) as Event[];
+
+  return {
+    data: events,
+    pagination: response.meta?.pagination ?? {
+      page: 1,
+      pageSize,
+      pageCount: 1,
+      total: events.length,
+    },
+  };
+}
+
+export async function getUpcomingEvents(limit = 6) {
+  const now = new Date().toISOString();
+  const response = await strapiFetch<StrapiPaginatedResponse<Event>>(
+    "/api/events",
+    {
+      query: {
+        "populate[0]": "heroImage",
+        "populate[1]": "tags",
+        "publicationState": "live",
+        "filters[startDate][$gte]": now,
+        "pagination[page]": 1,
+        "pagination[pageSize]": limit,
+        "sort[0]": "startDate:asc",
+      },
+      revalidate: 300,
+    },
+  );
+
+  return (response.data?.map((item) => {
+    if (item.attributes) {
+      return item.attributes;
+    }
+    return item;
+  }) ?? []) as Event[];
+}
+
+export async function getEventsByMonth(year: number, month: number) {
+  // month è 0-indexed (0 = gennaio, 11 = dicembre) per coerenza con JS Date
+  const startOfMonth = new Date(year, month, 1).toISOString();
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+  const response = await strapiFetch<StrapiPaginatedResponse<Event>>(
+    "/api/events",
+    {
+      query: {
+        "populate[0]": "heroImage",
+        "populate[1]": "tags",
+        "publicationState": "live",
+        "filters[$or][0][startDate][$gte]": startOfMonth,
+        "filters[$or][0][startDate][$lte]": endOfMonth,
+        "filters[$or][1][endDate][$gte]": startOfMonth,
+        "filters[$or][1][endDate][$lte]": endOfMonth,
+        "pagination[pageSize]": 100,
+        "sort[0]": "startDate:asc",
+      },
+      revalidate: 300,
+    },
+  );
+
+  return (response.data?.map((item) => {
+    if (item.attributes) {
+      return item.attributes;
+    }
+    return item;
+  }) ?? []) as Event[];
+}
+
+export async function getEventBySlug(slug: string) {
+  const response = await strapiFetch<StrapiCollectionResponse<Event>>(
+    "/api/events",
+    {
+      query: {
+        "populate[0]": "heroImage",
+        "populate[1]": "tags",
+        "populate[2]": "seo",
+        "populate[3]": "seo.metaImage",
+        "publicationState": "live",
+        "filters[slug][$eq]": slug,
+      },
+      revalidate: 3600,
+    },
+  );
+
+  const event = response.data?.[0];
+  return event?.attributes ?? event ?? null;
+}
+
 export type {
   Show,
   VideoEpisode,
@@ -1211,6 +1357,7 @@ export type {
   Column,
   Article,
   Petition,
+  Event,
   StrapiCollectionResponse,
   PaginationMeta,
 };

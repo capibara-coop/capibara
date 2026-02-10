@@ -4,6 +4,7 @@ import React from "react";
 import {
   Archive,
   BadgeEuro,
+  CalendarDays,
   Cpu,
   Headphones,
   Home as HomeIcon,
@@ -164,6 +165,13 @@ const primaryNav: NavLink[] = [
     href: "/petizioni",
     color: "bg-orange-500/20 border-orange-500/50 text-white",
     colorLight: "bg-orange-100 border-orange-500 text-orange-900"
+  },
+  { 
+    label: "Eventi", 
+    icon: CalendarDays, 
+    href: "/eventi",
+    color: "bg-emerald-500/20 border-emerald-500/50 text-white",
+    colorLight: "bg-emerald-100 border-emerald-500 text-emerald-900"
   },
   { label: "Archivio", icon: Archive, href: "/archivio" },
   {
