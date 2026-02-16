@@ -88,6 +88,10 @@ const toQueryString = (params: Record<string, string | number | boolean | undefi
   return query.toString();
 };
 
+const STRAPI_FETCH_TIMEOUT_MS = 15_000;
+const STRAPI_MAX_RETRIES = 3;
+const STRAPI_RETRY_BASE_DELAY_MS = 2_000;
+
 async function strapiFetch<T>(
   path: string,
   { cache = "force-cache", revalidate = 300, headers, query }: FetchOptions = {},
@@ -95,73 +99,96 @@ async function strapiFetch<T>(
   const qs = query ? `?${toQueryString(query)}` : "";
   const url = `${STRAPI_URL}${path}${qs}`;
 
-  // Log all requests in development
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🌐 Fetching from Strapi: ${path}`, { query });
+    console.log(`Fetching from Strapi: ${path}`, { query });
   }
 
-  try {
-    const res = await fetch(url, {
-      cache,
-      next: { revalidate },
-      headers: {
-        "Content-Type": "application/json",
-        ...(headers ?? {}),
-      },
-    } as NextFetchInit);
+  let lastError: unknown = null;
 
-    if (!res.ok) {
-      // Don't log 403 as error if it's just permissions not configured yet
-      if (res.status === 403) {
-        console.warn(
-          `⚠️ Strapi returned 403 for ${path}. Make sure to configure public permissions in Strapi admin:`,
-          "\n  Settings > Users & Permissions > Roles > Public",
-          "\n  Enable 'find' and 'findOne' for all content types"
-        );
-      } else if (res.status === 404) {
-        console.warn(
-          `⚠️ Strapi returned 404 for ${path}. This endpoint might not exist yet.`,
-          "\n  Make sure:",
-          "\n  1. Strapi server is running and has been restarted after creating the content type",
-          "\n  2. The content type is properly configured in Strapi",
-          "\n  3. Public permissions are configured:",
-          "\n     Settings > Users & Permissions > Roles > Public > [Content Type] > Enable 'find'"
-        );
-      } else {
-        console.error(`Strapi request failed: ${res.status} ${res.statusText} for ${path}`);
+  for (let attempt = 0; attempt < STRAPI_MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      const delay = STRAPI_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      console.warn(`Retrying Strapi request ${path} (attempt ${attempt + 1}/${STRAPI_MAX_RETRIES}) after ${delay}ms...`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STRAPI_FETCH_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, {
+        cache,
+        next: { revalidate },
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(headers ?? {}),
+        },
+      } as NextFetchInit);
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          console.warn(`Strapi returned ${res.status} for ${path}, will retry...`);
+          lastError = new Error(`${res.status} ${res.statusText}`);
+          continue;
+        }
+
+        if (res.status === 403) {
+          console.warn(
+            `Strapi returned 403 for ${path}. Make sure to configure public permissions in Strapi admin:`,
+            "\n  Settings > Users & Permissions > Roles > Public",
+            "\n  Enable 'find' and 'findOne' for all content types"
+          );
+        } else if (res.status === 404) {
+          console.warn(
+            `Strapi returned 404 for ${path}. This endpoint might not exist yet.`,
+            "\n  Make sure:",
+            "\n  1. Strapi server is running and has been restarted after creating the content type",
+            "\n  2. The content type is properly configured in Strapi",
+            "\n  3. Public permissions are configured:",
+            "\n     Settings > Users & Permissions > Roles > Public > [Content Type] > Enable 'find'"
+          );
+        } else {
+          console.error(`Strapi request failed: ${res.status} ${res.statusText} for ${path}`);
+        }
+        return { data: [] } as T;
       }
-      // Return empty data structure instead of crashing
+
+      const data = await res.json();
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Strapi response for ${path}:`, {
+          dataLength: Array.isArray(data.data) ? data.data.length : (data.data ? 1 : 0),
+          hasMeta: !!data.meta,
+          pagination: data.meta?.pagination,
+        });
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      lastError = error;
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isAbort = error instanceof DOMException && error.name === "AbortError";
+      const isRetryable = isAbort || errorMessage.includes('ECONNREFUSED') || errorMessage.includes('fetch failed');
+
+      if (isRetryable) {
+        console.warn(
+          `Strapi request for ${path} failed (${isAbort ? 'timeout' : 'connection error'}), attempt ${attempt + 1}/${STRAPI_MAX_RETRIES}`
+        );
+        continue;
+      }
+
+      console.error(`Failed to fetch from Strapi (${path}):`, error);
       return { data: [] } as T;
     }
-
-    const data = await res.json();
-    
-    // Debug: log all responses in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ Strapi response for ${path}:`, {
-        dataLength: Array.isArray(data.data) ? data.data.length : (data.data ? 1 : 0),
-        hasMeta: !!data.meta,
-        pagination: data.meta?.pagination,
-      });
-    }
-    
-    return data;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    // Check if it's a connection error
-    if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('fetch failed')) {
-      console.warn(
-        `⚠️ Cannot connect to Strapi at ${STRAPI_URL}`,
-        "\n  Make sure Strapi is running: cd apps/cms && npm run develop"
-      );
-    } else {
-      console.error(`Failed to fetch from Strapi (${path}):`, error);
-    }
-    
-    // Return empty data structure instead of crashing
-    return { data: [] } as T;
   }
+
+  console.error(`Strapi request for ${path} failed after ${STRAPI_MAX_RETRIES} attempts. Last error:`, lastError);
+  return { data: [] } as T;
 }
 
 type Show = {
