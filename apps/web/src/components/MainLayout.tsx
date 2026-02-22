@@ -113,67 +113,56 @@ const SocialLinks: React.FC<{ isDark: boolean; isCollapsed?: boolean }> = ({
   );
 };
 
-/* ─── Sidebar Search ────────────────────────────────────────────────────── */
+/* ─── Header Search ─────────────────────────────────────────────────────── */
 
-const SidebarSearch: React.FC<{ isDark: boolean; isCollapsed?: boolean }> = ({
-  isDark,
-  isCollapsed = false,
-}) => {
+const HeaderSearch: React.FC<{ isDark: boolean }> = ({ isDark }) => {
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const q = (new FormData(e.currentTarget).get("q") as string)?.trim();
-    if (q) router.push(`/archivio?q=${encodeURIComponent(q)}`);
+    if (q) {
+      router.push(`/archivio?q=${encodeURIComponent(q)}`);
+      (e.currentTarget.querySelector("input") as HTMLInputElement)?.blur();
+    }
   };
 
-  if (isCollapsed) {
-    return (
-      <Link
-        href="/archivio"
-        className={`group relative flex items-center justify-center rounded-xl p-2.5 transition ${
-          isDark
-            ? "text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
-            : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
-        }`}
-        title="Cerca"
-      >
-        <Search className="h-4 w-4" />
+  return (
+    <>
+      {/* Desktop: campo compatto */}
+      <form onSubmit={handleSubmit} className="hidden lg:block">
         <div
-          className={`absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${
-            isDark ? "bg-zinc-800 text-white" : "bg-zinc-900 text-white"
+          className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition w-44 focus-within:w-64 ${
+            isDark
+              ? "bg-black/15 border border-black/15 text-black focus-within:bg-black/25 focus-within:border-black/30"
+              : "bg-white/50 border border-zinc-300/50 text-zinc-800 focus-within:bg-white/70 focus-within:border-zinc-400"
           }`}
+          style={{ transition: "width 200ms ease, background 150ms ease, border-color 150ms ease" }}
         >
-          Cerca
-          <div
-            className={`absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent ${
-              isDark ? "border-r-zinc-800" : "border-r-zinc-900"
-            }`}
+          <Search className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+          <input
+            type="text"
+            name="q"
+            placeholder="Cerca…"
+            className="w-full bg-transparent outline-none text-xs placeholder:opacity-50"
+            aria-label="Cerca contenuti"
           />
         </div>
-      </Link>
-    );
-  }
+      </form>
 
-  return (
-    <form onSubmit={handleSubmit} className="px-1">
-      <div
-        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition ${
+      {/* Mobile: icona */}
+      <Link
+        href="/archivio"
+        className={`lg:hidden flex items-center justify-center w-9 h-9 rounded-full transition flex-shrink-0 ${
           isDark
-            ? "bg-white/5 text-zinc-400 focus-within:bg-white/10 focus-within:text-zinc-200"
-            : "bg-zinc-100 text-zinc-500 focus-within:bg-zinc-200/80 focus-within:text-zinc-700"
+            ? "text-black/70 hover:bg-black/10"
+            : "text-zinc-700 hover:bg-zinc-200/60"
         }`}
+        aria-label="Cerca"
       >
-        <Search className="h-4 w-4 flex-shrink-0" />
-        <input
-          type="text"
-          name="q"
-          placeholder="Cerca contenuti…"
-          className="w-full bg-transparent outline-none placeholder:text-zinc-500"
-          aria-label="Cerca contenuti"
-        />
-      </div>
-    </form>
+        <Search className="h-4 w-4" />
+      </Link>
+    </>
   );
 };
 
@@ -547,13 +536,8 @@ const SidebarContent: React.FC<{
       )}
     </div>
 
-    {/* Search */}
-    <div className={isCollapsed ? "mt-4" : "mt-5"}>
-      <SidebarSearch isDark={isDark} isCollapsed={isCollapsed} />
-    </div>
-
     {/* Navigation */}
-    <nav aria-label="Navigazione principale" className="mt-5 flex-1 space-y-4 overflow-y-auto">
+    <nav aria-label="Navigazione principale" className="mt-6 flex-1 space-y-4 overflow-y-auto">
       {navSections.map((section) => (
         <NavGroup
           key={section.id}
@@ -728,8 +712,9 @@ export default function MainLayout({
             <div className={getHeaderStyles(isDark).className} style={getHeaderStyles(isDark).style}>
               <div className="w-full px-4 sm:px-6 lg:px-8 pointer-events-auto">
                 <div className="flex items-center justify-between w-full gap-2 min-w-0">
-                  {/* Left: Mobile hamburger + logo, Desktop conflict-map link */}
-                  <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+                  {/* Left side */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* Mobile: hamburger + logo */}
                     <div className="flex items-center gap-2 lg:hidden">
                       <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -760,26 +745,28 @@ export default function MainLayout({
                         </span>
                       </Link>
                     </div>
+                    {/* Desktop: mappa + search */}
                     <Link
                       href="/conflitti"
-                      className={`hidden lg:flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
+                      className={`hidden lg:flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
                         isDark
                           ? "border border-black/30 text-black hover:border-black/70"
                           : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
                       }`}
                     >
-                      <Map className="h-4 w-4" />
+                      <Map className="h-3.5 w-3.5" />
                       <span>Mappa dei conflitti</span>
                     </Link>
+                    <HeaderSearch isDark={isDark} />
                   </div>
 
-                  {/* Right: Auth + Theme */}
-                  <div className="flex items-center gap-2 sm:gap-4 text-sm flex-shrink-0 min-w-0">
+                  {/* Right side */}
+                  <div className="flex items-center gap-2 text-sm min-w-0">
                     {!session && (
-                      <div className="flex items-center gap-1.5 sm:gap-2">
+                      <>
                         <Link
                           href="/abbonamenti"
-                          className={`hidden sm:inline-flex rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
+                          className={`hidden sm:inline-flex rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
                             isDark
                               ? "bg-white/90 text-black hover:bg-white"
                               : "bg-zinc-900 text-white hover:bg-zinc-800"
@@ -789,7 +776,7 @@ export default function MainLayout({
                         </Link>
                         <Link
                           href="/login"
-                          className={`rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
                             isDark
                               ? "border border-black/30 text-black hover:border-black/70"
                               : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
@@ -797,50 +784,45 @@ export default function MainLayout({
                         >
                           Accedi
                         </Link>
-                      </div>
+                      </>
                     )}
-                    <div className="flex gap-1.5 sm:gap-3">
-                      {session ? (
-                        <>
-                          <span className={`hidden sm:inline ${isDark ? "text-black" : "text-zinc-700"}`}>
-                            Ciao, {session.user?.name ?? "utente"}
-                          </span>
-                          <button
-                            onClick={() => signOut({ callbackUrl: "/" })}
-                            className={`rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm transition whitespace-nowrap ${
-                              isDark
-                                ? "border border-black/30 text-black hover:border-black/60 hover:text-black"
-                                : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 hover:text-zinc-900 bg-white"
-                            }`}
-                          >
-                            Esci
-                          </button>
-                        </>
-                      ) : (
+                    {session && (
+                      <>
+                        <span className={`hidden sm:inline text-xs ${isDark ? "text-black" : "text-zinc-700"}`}>
+                          Ciao, {session.user?.name ?? "utente"}
+                        </span>
                         <button
-                          type="button"
-                          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                          className={`flex items-center gap-1 sm:gap-2 rounded-full px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className={`rounded-full px-3 py-1.5 text-xs transition whitespace-nowrap ${
                             isDark
-                              ? "border border-black/30 bg-white/20 text-black hover:border-black/60 hover:bg-white/30"
-                              : "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-900 hover:text-zinc-900"
+                              ? "border border-black/30 text-black hover:border-black/60"
+                              : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 bg-white"
                           }`}
-                          aria-label={isDark ? "Passa a light mode" : "Passa a dark mode"}
                         >
-                          {isDark ? (
-                            <>
-                              <Moon className="h-4 w-4" />
-                              <span className="hidden sm:inline">Dark</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sun className="h-4 w-4 text-amber-500" />
-                              <span className="hidden sm:inline">Light</span>
-                            </>
-                          )}
+                          Esci
                         </button>
-                      )}
-                    </div>
+                      </>
+                    )}
+                    {/* Dark/Light toggle — icon only with rotate animation */}
+                    <button
+                      type="button"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="flex items-center justify-center w-9 h-9 rounded-full text-black hover:bg-black/10 transition-colors"
+                      aria-label={isDark ? "Passa a light mode" : "Passa a dark mode"}
+                    >
+                      <div className="relative h-4 w-4">
+                        <Moon
+                          className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                            isDark ? "rotate-0 scale-100 opacity-100" : "rotate-90 scale-0 opacity-0"
+                          }`}
+                        />
+                        <Sun
+                          className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                            isDark ? "-rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+                          }`}
+                        />
+                      </div>
+                    </button>
                   </div>
                 </div>
               </div>
