@@ -14,8 +14,12 @@ export function markdownToHtml(input: string): string {
   const hasBlockquotes = /<\/?blockquote(\s[^>]*)?>/i.test(text);
 
   if (hasHtmlTags && hasBlockTags) {
+    // Bold / italic with asterisks
     processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    // Bold / italic with underscores
+    processed = processed.replace(/__(.+?)__/g, "<strong>$1</strong>");
+    processed = processed.replace(/_(.+?)_/g, "<em>$1</em>");
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
       const safeLabel = String(label ?? "");
       const safeUrl = String(url ?? "").replace(/"/g, "&quot;");
@@ -100,10 +104,12 @@ export function markdownToHtml(input: string): string {
 
   processed = result.join("\n");
 
-  // Bold **text**
+  // Bold **text** or __text__
   processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  // Italic *text*
+  processed = processed.replace(/__(.+?)__/g, "<strong>$1</strong>");
+  // Italic *text* or _text_
   processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  processed = processed.replace(/_(.+?)_/g, "<em>$1</em>");
 
   // Split into paragraphs on double newline
   const paragraphs = processed.split(/\n{2,}/).map((block) => {
