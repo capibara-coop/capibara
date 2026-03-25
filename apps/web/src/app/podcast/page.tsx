@@ -1,8 +1,62 @@
-import { getPodcastEpisodes } from "@/lib/api";
+import { getPodcastEpisodes, getLatestPodcastEpisodes, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
+  
+  // Helper per garantire URL assoluto per Open Graph
+  const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
+  };
+  
+  // Ottieni il primo podcast per usare la sua immagine come anteprima
+  const latestPodcasts = await getLatestPodcastEpisodes(1);
+  let ogImage = `${siteUrl}/logo_capibara.png`;
+  
+  if (latestPodcasts.length > 0 && latestPodcasts[0]?.heroImage) {
+    const { url } = extractHeroImage(latestPodcasts[0].heroImage);
+    const absoluteUrl = ensureAbsoluteUrl(url);
+    if (absoluteUrl) {
+      ogImage = absoluteUrl;
+    }
+  }
+  
+  return {
+    metadataBase: new URL(siteUrl),
+    title: "Podcast",
+    description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+    openGraph: {
+      type: "website",
+      locale: "it_IT",
+      url: `${siteUrl}/podcast`,
+      siteName: "Capibara",
+      title: "Podcast | Capibara",
+      description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: "Podcast Capibara",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Podcast | Capibara",
+      description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function PodcastPage({
   searchParams,
@@ -17,15 +71,17 @@ export default async function PodcastPage({
     <MainLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-4xl font-semibold text-white">Podcast</h1>
-          <p className="mt-2 text-zinc-400">
-            Tutti gli episodi podcast di VentiQuaranta
+          <h1 className="page-title text-4xl font-semibold">Podcast</h1>
+          <p className="body-text mt-2">
+            {episodes.length > 0 && episodes[0]?.show?.data?.attributes?.title
+              ? `Tutti gli episodi podcast di ${episodes[0].show.data.attributes.title}`
+              : "Tutti gli episodi podcast"}
           </p>
         </div>
 
         {episodes.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/80 p-12 text-center">
-            <p className="text-zinc-400">Nessun podcast disponibile al momento.</p>
+          <div className="content-box p-12 text-center">
+            <p className="body-text">Nessun podcast disponibile al momento.</p>
           </div>
         ) : (
           <>
@@ -36,6 +92,8 @@ export default async function PodcastPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "podcast";
                 const accent = getKindAccent(showKind);
 
+                const { url, alt } = extractHeroImage(episode.heroImage);
+
                 return (
                   <ContentCard
                     key={episode.slug}
@@ -45,9 +103,12 @@ export default async function PodcastPage({
                       summary: episode.summary ?? episode.synopsis ?? "",
                       tag: "Podcast",
                       accent,
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? episode.title,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "podcast",
+                      borderColor: "teal-500",
                     }}
                   />
                 );
@@ -59,7 +120,7 @@ export default async function PodcastPage({
                 {pagination.page > 1 && (
                   <Link
                     href={`/podcast?page=${pagination.page - 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     ← Precedente
                   </Link>
@@ -70,7 +131,7 @@ export default async function PodcastPage({
                 {pagination.page < pagination.pageCount && (
                   <Link
                     href={`/podcast?page=${pagination.page + 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     Successiva →
                   </Link>

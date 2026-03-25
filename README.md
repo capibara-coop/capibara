@@ -1,18 +1,18 @@
 ## Breaking Media CMS
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Monorepo di partenza per una media company moderna composta da:
 
-- `apps/web`: frontend pubblico in Next.js 14 (App Router, Tailwind, alias `@/*`)
+- `apps/web`: frontend pubblico in Next.js 16 (App Router, Tailwind, alias `@/*`)
 - `apps/cms`: backend editoriale Strapi 5 in TypeScript, pronto per Postgres
 - `docker-compose.yml`: servizio Postgres 16 per sviluppo locale
 
-L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area pubblica, contenuti premium e readiness per paywall/abbonamenti.
+L'obiettivo è offrire un CMS piacevole da usare, facile da gestire e completo di backend editoriale e frontend pubblico già pronti per contenuti pubblici e premium.
 
 ### Stack
 
-- **Next.js 14 + Tailwind CSS** per il canale pubblico e l'area utente
+- **Next.js 16 + Tailwind CSS** per il canale pubblico e l'area utente
 - **Strapi 5 (TypeScript)** come headless CMS
 - **PostgreSQL 16** come database primario (containerizzato)
 - **Stripe/Auth0/Supabase** da integrare successivamente per pagamenti e autenticazione
@@ -29,7 +29,7 @@ L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area
 
    ```bash
    git clone <repository-url>
-   cd CMS
+   cd capibara
    ```
 
 2. **Avvia Postgres**
@@ -83,6 +83,14 @@ L'obiettivo è replicare una UX simile alla reference di Breaking Italy con area
 
 Questo setup fornisce la base infrastrutturale per sviluppare velocemente sia l'area pubblica sia quella riservata agli abbonati.
 
+### Documentazione
+
+La documentazione completa è disponibile nella cartella [`docs/`](./docs/):
+
+- 📖 **[Deployment](./docs/deployment/)** - Guide complete per il deployment su Vercel e Render
+- 🔍 **[SEO Plugin](./docs/seo/)** - Configurazione e utilizzo del plugin SEO per Strapi
+- ☁️ **[Cloudinary](./docs/cloudinary/)** - Setup e troubleshooting per lo storage immagini persistente
+
 ### Licenza
 
-Questo progetto è rilasciato sotto licenza [MIT](LICENSE). Vedi il file `LICENSE` per i dettagli.
+Questo progetto è rilasciato sotto licenza [AGPL v3](LICENSE). Vedi il file `LICENSE` per i dettagli.

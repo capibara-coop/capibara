@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Show } from "@/lib/api";
+import { getStrapiMediaUrl } from "@/lib/api";
 
 type ContentTile = {
   title: string;
@@ -9,13 +11,18 @@ type ContentTile = {
   accent: string;
   locked?: boolean;
   slug?: string;
-  type?: "video" | "podcast" | "newsletter" | "article";
+  type?: "video" | "podcast" | "newsroom" | "article";
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  borderColor?: string; // Colore bordo opzionale (es: "border-indigo-500/50")
+  authorName?: string | null; // Nome dell'autore (opzionale)
+  authorAvatar?: string | null; // URL dell'avatar dell'autore (opzionale)
 };
 
 const kindAccent: Record<Show["kind"], string> = {
   video: "from-purple-500/30 via-fuchsia-500/20 to-amber-400/30",
   podcast: "from-teal-500/30 via-sky-500/20 to-blue-900/40",
-  newsletter: "from-yellow-500/20 via-orange-600/20 to-red-700/30",
+  newsroom: "from-yellow-500/20 via-orange-600/20 to-red-700/30",
 };
 
 export const formatDate = (iso?: string | null) => {
@@ -38,22 +45,79 @@ export default function ContentCard({ entry }: { entry: ContentTile }) {
   
   const href = getHref();
   
+  // entry.imageUrl is already a full URL from getStrapiMediaUrl, so use it directly
+  // Only call getStrapiMediaUrl if it's a relative path
+  const cardImageUrl = entry.imageUrl 
+    ? (entry.imageUrl.startsWith('http://') || entry.imageUrl.startsWith('https://'))
+      ? entry.imageUrl
+      : getStrapiMediaUrl(entry.imageUrl)
+    : null;
+
+  // Debug log in development
+  if (process.env.NODE_ENV === 'development' && entry.type === 'video') {
+    console.log('ContentCard imageUrl:', {
+      title: entry.title,
+      imageUrl: entry.imageUrl,
+      cardImageUrl,
+      hasImage: !!cardImageUrl,
+    });
+  }
+
+  // Se borderColor è specificato, aggiunge un attributo data per il colore del border
+  // Le classi CSS personalizzate in globals.css gestiscono i colori per dark/light mode
+  const borderColorAttr = entry.borderColor 
+    ? { "data-border-color": entry.borderColor.replace("border-", "").replace("/50", "") }
+    : {};
+  
   const CardContent = (
-    <article className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-white/25 cursor-pointer">
-      <div className={`h-40 rounded-2xl bg-gradient-to-r ${entry.accent}`} />
+    <article className="content-card" {...borderColorAttr}>
+      <div className={`relative h-40 rounded-2xl overflow-hidden bg-gradient-to-r ${entry.accent}`}>
+        {cardImageUrl ? (
+          <Image
+            src={cardImageUrl}
+            alt={entry.imageAlt || entry.title}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 320px, (min-width: 768px) 50vw, 100vw"
+            unoptimized={cardImageUrl.includes('localhost') || cardImageUrl.includes('127.0.0.1')}
+          />
+        ) : null}
+        {/* overlay leggera per mantenere leggibilità e mood del brand */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      </div>
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm uppercase tracking-wide text-zinc-400">
+        <div className="content-card-tag">
           <span>{entry.tag}</span>
           {entry.locked && (
-            <span className="rounded-full bg-amber-400/10 px-3 py-0.5 text-xs text-amber-200">
+            <span className="locked-badge">
               Abbonati
             </span>
           )}
         </div>
-        <h3 className="text-xl font-semibold text-white">{entry.title}</h3>
-        <p className="text-sm text-zinc-400 line-clamp-2">{entry.summary}</p>
+        <h3 className="content-card-title">{entry.title}</h3>
+        {entry.authorName && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">di</span>
+            {entry.authorAvatar && (
+              <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-zinc-700 overflow-hidden flex items-center justify-center shrink-0">
+                <Image
+                  src={entry.authorAvatar}
+                  alt={entry.authorName}
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-contain translate-y-1.5 scale-110"
+                  unoptimized={entry.authorAvatar.includes('localhost') || entry.authorAvatar.includes('127.0.0.1')}
+                />
+              </div>
+            )}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+              {entry.authorName}
+            </span>
+          </div>
+        )}
+        <p className="content-card-summary">{entry.summary}</p>
       </div>
-      <div className="mt-auto text-xs uppercase tracking-wide text-zinc-500">
+      <div className="content-card-date">
         {entry.date}
       </div>
     </article>

@@ -1,8 +1,63 @@
-import { getVideoEpisodes } from "@/lib/api";
+import { getVideoEpisodes, getLatestVideoEpisodes, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
+import { getVideoPreviewImageUrl } from "@/lib/youtube";
 import type { Show } from "@/lib/api";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
+  
+  // Helper per garantire URL assoluto per Open Graph
+  const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
+  };
+  
+  // Ottieni il primo video per usare la sua immagine come anteprima
+  const latestVideos = await getLatestVideoEpisodes(1);
+  let ogImage = `${siteUrl}/logo_capibara.png`;
+  
+  if (latestVideos.length > 0 && latestVideos[0]?.heroImage) {
+    const { url } = extractHeroImage(latestVideos[0].heroImage);
+    const absoluteUrl = ensureAbsoluteUrl(url);
+    if (absoluteUrl) {
+      ogImage = absoluteUrl;
+    }
+  }
+  
+  return {
+    metadataBase: new URL(siteUrl),
+    title: "Video",
+    description: "Tutti gli episodi video di Capibara Originals: documentari, interviste e reportage su lavoro, diritti e conflitti sociali.",
+    openGraph: {
+      type: "website",
+      locale: "it_IT",
+      url: `${siteUrl}/video`,
+      siteName: "Capibara",
+      title: "Video | Capibara",
+      description: "Tutti gli episodi video di Capibara Originals: documentari, interviste e reportage su lavoro, diritti e conflitti sociali.",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: "Video Capibara",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Video | Capibara",
+      description: "Tutti gli episodi video di Capibara Originals: documentari, interviste e reportage su lavoro, diritti e conflitti sociali.",
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function VideoPage({
   searchParams,
@@ -17,15 +72,15 @@ export default async function VideoPage({
     <MainLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-4xl font-semibold text-white">Video</h1>
-          <p className="mt-2 text-zinc-400">
+          <h1 className="page-title text-4xl font-semibold">Video</h1>
+          <p className="body-text mt-2">
             Tutti gli episodi video di Capibara Originals
           </p>
         </div>
 
         {episodes.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/80 p-12 text-center">
-            <p className="text-zinc-400">Nessun video disponibile al momento.</p>
+          <div className="content-box p-12 text-center">
+            <p className="body-text">Nessun video disponibile al momento.</p>
           </div>
         ) : (
           <>
@@ -36,6 +91,12 @@ export default async function VideoPage({
                   (showData?.attributes?.kind as Show["kind"]) ?? "video";
                 const accent = getKindAccent(showKind);
 
+                // Usa sempre il primo frame del video (thumbnail YouTube) se disponibile, altrimenti hero image
+                const previewImageUrl = getVideoPreviewImageUrl(episode.videoUrl);
+                const { url: heroImageUrl, alt: imageAltRaw } = extractHeroImage(episode.heroImage);
+                const imageUrl = previewImageUrl ?? heroImageUrl ?? undefined;
+                const imageAlt = imageAltRaw ?? episode.title ?? "Video";
+
                 return (
                   <ContentCard
                     key={episode.slug}
@@ -45,9 +106,12 @@ export default async function VideoPage({
                       summary: episode.synopsis ?? episode.summary ?? "",
                       tag: "Video",
                       accent,
+                      imageUrl,
+                      imageAlt,
                       locked: episode.isPremium ?? false,
                       slug: episode.slug,
                       type: "video",
+                      borderColor: "purple-500",
                     }}
                   />
                 );
@@ -59,7 +123,7 @@ export default async function VideoPage({
                 {pagination.page > 1 && (
                   <Link
                     href={`/video?page=${pagination.page - 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     ← Precedente
                   </Link>
@@ -70,7 +134,7 @@ export default async function VideoPage({
                 {pagination.page < pagination.pageCount && (
                   <Link
                     href={`/video?page=${pagination.page + 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     Successiva →
                   </Link>

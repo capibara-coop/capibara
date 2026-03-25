@@ -1,0 +1,48 @@
+services:
+  # Servizio Web Strapi
+  - type: web
+    name: capibara-cms
+    runtime: node
+    plan: starter
+    buildCommand: cd apps/cms && npm ci && npm run build
+    startCommand: cd apps/cms && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 1337
+      - key: DATABASE_CLIENT
+        value: postgres
+      - key: DATABASE_SSL
+        value: "true"
+      - key: APP_KEYS
+        generateValue: true
+      - key: API_TOKEN_SALT
+        generateValue: true
+      - key: ADMIN_JWT_SECRET
+        generateValue: true
+      - key: TRANSFER_TOKEN_SALT
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      # CORS: aggiungi EDITOR_URL quando la PWA è deployata
+      # - key: EDITOR_URL
+      #   value: https://capibara-editor.vercel.app
+
+  # PWA Editor (Static Site) - Opzionale
+  # Decommenta se vuoi deployare l'editor su Render invece di Vercel/Netlify
+  # - type: web
+  #   name: capibara-editor
+  #   runtime: static
+  #   buildCommand: cd apps/editor && npm ci && npm run build
+  #   staticPublishPath: apps/editor/dist
+  #   envVars:
+  #     - key: VITE_STRAPI_URL
+  #       value: https://capibara-cms.onrender.com
+  #     - key: VITE_API_TOKEN
+  #       sync: false  # Aggiungi manualmente in Render Dashboard
+

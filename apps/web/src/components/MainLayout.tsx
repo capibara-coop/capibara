@@ -1,203 +1,935 @@
 "use client";
 
+import React from "react";
 import {
   Archive,
   BadgeEuro,
+  CalendarDays,
+  GraduationCap,
   Headphones,
   Home as HomeIcon,
-  List,
   Lock,
   Mail,
-  MessageCircle,
+  Map,
   PlayCircle,
-  Search,
   Star,
-  Timer,
-  Users,
-  type LucideIcon,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+  FileSignature,
+  Search,
+  Newspaper,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import NewsTicker, { type TickerItem } from "@/components/NewsTicker";
+
+/* ─── Types ─────────────────────────────────────────────────────────────── */
 
 type NavLink = {
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
   notify?: boolean;
   locked?: boolean;
   children?: string[];
+  color?: string;
+  colorLight?: string;
 };
 
-const primaryNav: NavLink[] = [
-  { label: "Home", icon: HomeIcon, href: "/" },
-  { label: "Feed", icon: List, href: "/feed" },
-  { label: "Video", icon: PlayCircle, href: "/video" },
-  { label: "Podcast", icon: Headphones, href: "/podcast", notify: true },
-  { label: "Articoli", icon: Timer, href: "/articoli" },
+type NavSection = {
+  id: string;
+  title?: string;
+  links: NavLink[];
+};
+
+/* ─── Logo & Icon Components ────────────────────────────────────────────── */
+
+const CapibaraLogoIcon: React.FC<{
+  className?: string;
+  isDark?: boolean;
+  isActive?: boolean;
+}> = ({ className, isDark = true, isActive = false }) => {
+  const logoSrc = !isDark && !isActive ? "/icon_black.png" : "/icon_white.png";
+  return (
+    <Image
+      src={logoSrc}
+      alt="Capibara"
+      width={24}
+      height={24}
+      className={`rounded-md bg-white/5 object-contain p-0.5 ${className ?? ""}`}
+    />
+  );
+};
+
+const FacebookIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+  </svg>
+);
+
+const InstagramIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  </svg>
+);
+
+const TikTokIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+  </svg>
+);
+
+/* ─── Social Links (shared: desktop sidebar + mobile drawer) ────────────── */
+
+const SOCIAL_LINKS = [
+  { Icon: FacebookIcon, href: "https://www.facebook.com/profile.php?id=61584685405654", label: "Facebook" },
+  { Icon: InstagramIcon, href: "https://www.instagram.com/capibara_coop?igsh=MWhlbWJ2M2o0djRyMA==", label: "Instagram" },
+  { Icon: TikTokIcon, href: "https://www.tiktok.com/@capibara.media", label: "TikTok" },
+] as const;
+
+const SocialLinks: React.FC<{ isDark: boolean; isCollapsed?: boolean }> = ({
+  isDark,
+  isCollapsed = false,
+}) => {
+  const cls = `p-2 rounded-lg transition ${
+    isDark
+      ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+  }`;
+
+  return (
+    <div className={`flex ${isCollapsed ? "flex-col items-center" : "items-center"} gap-3`}>
+      {SOCIAL_LINKS.map(({ Icon, href, label }) => (
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={cls} aria-label={label}>
+          <Icon className="h-5 w-5" />
+        </a>
+      ))}
+    </div>
+  );
+};
+
+/* ─── Header Search ─────────────────────────────────────────────────────── */
+
+const HeaderSearch: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = (new FormData(e.currentTarget).get("q") as string)?.trim();
+    if (q) {
+      router.push(`/archivio?q=${encodeURIComponent(q)}`);
+      (e.currentTarget.querySelector("input") as HTMLInputElement)?.blur();
+    }
+  };
+
+  return (
+    <>
+      {/* Desktop: campo compatto */}
+      <form onSubmit={handleSubmit} className="hidden lg:block">
+        <div
+          className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition w-44 focus-within:w-64 ${
+            isDark
+              ? "bg-black/15 border border-black/15 text-black focus-within:bg-black/25 focus-within:border-black/30"
+              : "bg-white/50 border border-zinc-300/50 text-zinc-800 focus-within:bg-white/70 focus-within:border-zinc-400"
+          }`}
+          style={{ transition: "width 200ms ease, background 150ms ease, border-color 150ms ease" }}
+        >
+          <Search className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+          <input
+            type="text"
+            name="q"
+            placeholder="Cerca…"
+            className="w-full bg-transparent outline-none text-xs placeholder:opacity-50"
+            aria-label="Cerca contenuti"
+          />
+        </div>
+      </form>
+
+      {/* Mobile: icona */}
+      <Link
+        href="/archivio"
+        className={`lg:hidden flex items-center justify-center w-9 h-9 rounded-full transition flex-shrink-0 ${
+          isDark
+            ? "text-black/70 hover:bg-black/10"
+            : "text-zinc-700 hover:bg-zinc-200/60"
+        }`}
+        aria-label="Cerca"
+      >
+        <Search className="h-4 w-4" />
+      </Link>
+    </>
+  );
+};
+
+/* ─── Footer Links (shared: desktop sidebar + mobile drawer) ────────────── */
+
+const FOOTER_LINKS = [
+  [
+    { label: "Redazione", href: "/chi-siamo/redazione" },
+    { label: "Partner", href: "/partner" },
+    { label: "Tecnologia", href: "/tecnologia" },
+  ],
+  [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Termini", href: "/termini" },
+    { label: "Contattaci", href: "#" },
+  ],
+] as const;
+
+const SidebarFooterLinks: React.FC<{
+  isDark: boolean;
+  onLinkClick?: () => void;
+}> = ({ isDark, onLinkClick }) => (
+  <div className={`space-y-2 text-xs ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+    {FOOTER_LINKS.map((row, i) => (
+      <p key={i} className="flex flex-wrap gap-x-2 gap-y-1">
+        {row.map((link, j) => (
+          <React.Fragment key={link.label}>
+            {j > 0 && <span>·</span>}
+            {link.href === "#" ? (
+              <span>{link.label}</span>
+            ) : (
+              <Link
+                href={link.href}
+                onClick={onLinkClick}
+                className={`transition ${isDark ? "hover:text-zinc-300" : "hover:text-zinc-700"}`}
+              >
+                {link.label}
+              </Link>
+            )}
+          </React.Fragment>
+        ))}
+      </p>
+    ))}
+  </div>
+);
+
+/* ─── Header Styles ─────────────────────────────────────────────────────── */
+
+const getHeaderStyles = (isDark: boolean) => {
+  const baseClasses =
+    "flex flex-col gap-6 w-full py-6 rounded-3xl border backdrop-blur-xl border-white/10";
+
+  if (isDark) {
+    return {
+      className: baseClasses,
+      style: {
+        background:
+          "linear-gradient(135deg, rgba(248, 113, 113, 0.7) 0%, rgba(251, 146, 60, 0.65) 100%)",
+        boxShadow:
+          "0 8px 32px 0 rgba(248, 113, 113, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 1px 0 0 rgba(255, 255, 255, 0.1) inset",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      },
+    };
+  }
+  return {
+    className: baseClasses,
+    style: {
+      background:
+        "linear-gradient(135deg, rgba(248, 113, 113, 0.75) 0%, rgba(251, 146, 60, 0.7) 100%)",
+      boxShadow:
+        "0 8px 32px 0 rgba(248, 113, 113, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 1px 0 0 rgba(255, 255, 255, 0.3) inset",
+      backdropFilter: "blur(20px) saturate(180%)",
+      WebkitBackdropFilter: "blur(20px) saturate(180%)",
+    },
+  };
+};
+
+/* ─── Navigation Data (organized by section) ────────────────────────────── */
+
+const navSections: NavSection[] = [
   {
-    label: "Newsletter",
-    icon: Mail,
-    href: "/newsletter",
-    locked: true,
-    children: ["Capibara Insider", "Deep Dive"],
+    id: "main",
+    links: [{ label: "Home", icon: HomeIcon, href: "/" }],
   },
-  { label: "Contenuti Extra", icon: Star, href: "/", locked: true },
-  { label: "Archivio", icon: Archive, href: "/archivio" },
+  {
+    id: "contenuti",
+    title: "Contenuti",
+    links: [
+      { label: "Newsroom", icon: Mail, href: "/newsroom" },
+      {
+        label: "Articoli",
+        icon: Newspaper,
+        href: "/articoli",
+        color: "bg-teal-500/20 border-teal-500/50 text-white",
+        colorLight: "bg-teal-100 border-teal-500 text-teal-900",
+      },
+      {
+        label: "Podcast",
+        icon: Headphones,
+        href: "/podcast",
+        color: "bg-teal-500/20 border-teal-500/50 text-white",
+        colorLight: "bg-teal-100 border-teal-500 text-teal-900",
+      },
+      {
+        label: "Video",
+        icon: PlayCircle,
+        href: "/video",
+        color: "bg-purple-500/20 border-purple-500/50 text-white",
+        colorLight: "bg-purple-100 border-purple-500 text-purple-900",
+      },
+    ],
+  },
+  {
+    id: "partecipa",
+    title: "Partecipa",
+    links: [
+      {
+        label: "Eventi",
+        icon: CalendarDays,
+        href: "/eventi",
+        color: "bg-emerald-500/20 border-emerald-500/50 text-white",
+        colorLight: "bg-emerald-100 border-emerald-500 text-emerald-900",
+      },
+      {
+        label: "Petizioni",
+        icon: FileSignature,
+        href: "/petizioni",
+        color: "bg-orange-500/20 border-orange-500/50 text-white",
+        colorLight: "bg-orange-100 border-orange-500 text-orange-900",
+      },
+      {
+        label: "Corsi",
+        icon: GraduationCap,
+        href: "/corsi",
+        color: "bg-amber-500/20 border-amber-500/50 text-white",
+        colorLight: "bg-amber-100 border-amber-500 text-amber-900",
+      },
+    ],
+  },
+  {
+    id: "esplora",
+    title: "Esplora",
+    links: [
+      {
+        label: "Mappa dei conflitti",
+        icon: Map,
+        href: "/conflitti",
+        color: "bg-red-500/20 border-red-500/50 text-white",
+        colorLight: "bg-red-100 border-red-500 text-red-900",
+      },
+      { label: "Contenuti Extra", icon: Star, href: "/extra", locked: true },
+      { label: "Archivio", icon: Archive, href: "/archivio" },
+    ],
+  },
+  {
+    id: "community",
+    title: "Community",
+    links: [
+      { label: "Chi siamo", icon: CapibaraLogoIcon, href: "/chi-siamo" },
+      { label: "Abbonamenti", icon: BadgeEuro, href: "/abbonamenti" },
+    ],
+  },
 ];
 
-const utilityNav: NavLink[] = [
-  { label: "Partner", icon: Users, href: "/partner" },
-  { label: "Abbonamenti", icon: BadgeEuro, href: "/abbonamenti" },
-  { label: "Messaggi", icon: MessageCircle, href: "/", notify: true },
-];
+const allNavLinks = navSections.flatMap((s) => s.links);
+
+/* ─── NavGroup ──────────────────────────────────────────────────────────── */
 
 const NavGroup = ({
   title,
   links,
   currentPath,
+  isDark,
+  onLinkClick,
+  isCollapsed = false,
 }: {
   title?: string;
   links: NavLink[];
   currentPath: string;
-}) => (
-  <div className="space-y-1">
-    {title && (
-      <p className="px-3 text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
-        {title}
-      </p>
-    )}
-    {links.map((item) => {
-      const isActive = currentPath === item.href;
-      return (
-        <Link
-          key={item.label}
-          href={item.href}
-          className={`flex flex-col rounded-2xl px-3 py-2 text-sm transition ${
-            isActive
-              ? "bg-white/10 text-white"
-              : "text-zinc-300 hover:bg-white/5"
+  isDark: boolean;
+  onLinkClick?: () => void;
+  isCollapsed?: boolean;
+}) => {
+  const hasMoreSpecificMatch = (href: string) =>
+    allNavLinks.some(
+      (link) =>
+        link.href !== href &&
+        link.href.startsWith(href + "/") &&
+        currentPath.startsWith(link.href),
+    );
+
+  return (
+    <div className="space-y-1">
+      {title && !isCollapsed && (
+        <p
+          className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.25em] ${
+            isDark ? "text-zinc-600" : "text-zinc-400"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <item.icon
-              className={`h-4 w-4 ${isActive ? "text-white" : "text-zinc-500"}`}
-            />
-            <span className="flex-1">{item.label}</span>
-            {item.locked && (
-              <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">
-                <Lock className="h-3 w-3" />
-                Solo membri
-              </span>
+          {title}
+        </p>
+      )}
+      {title && isCollapsed && (
+        <div className={`mx-auto my-1 w-6 border-t ${isDark ? "border-white/10" : "border-zinc-200"}`} />
+      )}
+
+      {links.map((item) => {
+        const isActive =
+          (currentPath === item.href ||
+            (item.href !== "/" && currentPath.startsWith(item.href + "/"))) &&
+          !hasMoreSpecificMatch(item.href);
+
+        const activeColorClass =
+          isActive && item.color
+            ? isDark
+              ? item.color
+              : item.colorLight || item.color
+            : null;
+
+        const baseClasses = isDark
+          ? isActive
+            ? activeColorClass || "bg-white/10 text-white"
+            : "text-zinc-300 hover:bg-white/5"
+          : isActive
+            ? activeColorClass || "bg-zinc-900 text-white"
+            : "text-zinc-700 hover:bg-zinc-100";
+
+        const borderClass = isActive && item.color ? "border" : "";
+
+        const iconClasses = isDark
+          ? isActive
+            ? "text-white"
+            : "text-zinc-500"
+          : isActive
+            ? "text-black"
+            : "text-zinc-500";
+
+        const lockedClasses = isDark ? "bg-white/10 text-white/70" : "bg-zinc-900 text-zinc-100";
+
+        return (
+          <Link
+            key={item.label}
+            href={item.href}
+            onClick={onLinkClick}
+            aria-current={isActive ? "page" : undefined}
+            className={`group relative flex flex-col rounded-2xl ${
+              isCollapsed ? "px-2 py-3 items-center" : "px-3 py-2"
+            } text-sm transition ${baseClasses} ${borderClass}`}
+            title={isCollapsed ? item.label : undefined}
+          >
+            <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
+              {item.icon === CapibaraLogoIcon ? (
+                <CapibaraLogoIcon className={`h-4 w-4 ${iconClasses}`} isDark={isDark} isActive={isActive} />
+              ) : (
+                <item.icon className={`h-4 w-4 ${iconClasses}`} />
+              )}
+              {!isCollapsed && (
+                <>
+                  <span className="flex-1">{item.label}</span>
+                  {item.locked && (
+                    <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${lockedClasses}`}>
+                      <Lock className="h-3 w-3" />
+                      Solo membri
+                    </span>
+                  )}
+                  {item.notify && <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />}
+                </>
+              )}
+            </div>
+
+            {isCollapsed && (
+              <div
+                className={`absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${
+                  isDark ? "bg-zinc-800 text-white" : "bg-zinc-900 text-white"
+                }`}
+              >
+                {item.label}
+                <div
+                  className={`absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent ${
+                    isDark ? "border-r-zinc-800" : "border-r-zinc-900"
+                  }`}
+                />
+              </div>
             )}
-            {item.notify && (
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+
+            {item.children && !isCollapsed && (
+              <div
+                className={`mt-2 space-y-1 border-l pl-5 text-xs ${isDark ? "border-white/10 text-zinc-500" : "border-zinc-200 text-zinc-500"}`}
+              >
+                {item.children.map((child) => (
+                  <div key={child}>{child}</div>
+                ))}
+              </div>
             )}
-          </div>
-          {item.children && (
-            <div className="mt-2 space-y-1 border-l border-white/10 pl-5 text-xs text-zinc-500">
-              {item.children.map((child) => (
-                <div key={child}>{child}</div>
-              ))}
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ─── Sidebar Content (shared: desktop sidebar + mobile drawer) ─────────── */
+
+const SidebarContent: React.FC<{
+  isDark: boolean;
+  currentPath: string;
+  isCollapsed?: boolean;
+  onLinkClick?: () => void;
+  onToggleCollapse?: () => void;
+}> = ({ isDark, currentPath, isCollapsed = false, onLinkClick, onToggleCollapse }) => (
+  <>
+    {/* Logo + Collapse Toggle */}
+    <div
+      className={`flex ${
+        isCollapsed ? "flex-col items-center gap-2" : "items-center justify-between px-1"
+      }`}
+    >
+      <Link href="/" className={isCollapsed ? "" : "flex-1"} onClick={onLinkClick}>
+        <div className={`flex items-center ${isCollapsed ? "gap-0" : "gap-3"}`}>
+          <Image
+            src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+            alt="Capibara logo"
+            width={isCollapsed ? 48 : 80}
+            height={isCollapsed ? 36 : 60}
+            className={`${
+              isCollapsed ? "h-9 w-12 rounded-md p-1" : "h-15 w-20 rounded-2xl p-2"
+            } bg-white/5 object-contain`}
+            style={{
+              filter: isDark
+                ? "brightness(1.1) saturate(1.2) hue-rotate(-5deg)"
+                : "brightness(0.95) saturate(1.1) hue-rotate(-5deg)",
+            }}
+            priority
+          />
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-base font-semibold tracking-wide ${
+                    isDark ? "text-white" : "text-zinc-900"
+                  }`}
+                >
+                  Capibara
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                    isDark
+                      ? "bg-gradient-to-r from-amber-400 to-amber-600 text-black"
+                      : "bg-gradient-to-r from-amber-500 to-amber-600 text-black"
+                  }`}
+                >
+                  Beta
+                </span>
+              </div>
+              <span className="text-[11px] text-zinc-500">Storie da chi non ha potere</span>
             </div>
           )}
-        </Link>
-      );
-    })}
-  </div>
+        </div>
+      </Link>
+
+      {onToggleCollapse && (
+        <button
+          onClick={onToggleCollapse}
+          className={`flex items-center justify-center w-7 h-7 rounded-lg transition ${
+            isDark
+              ? "text-zinc-500 hover:bg-white/10 hover:text-zinc-300"
+              : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+          }`}
+          aria-label={isCollapsed ? "Espandi sidebar" : "Comprimi sidebar"}
+        >
+          {isCollapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </button>
+      )}
+    </div>
+
+    {/* Navigation */}
+    <nav aria-label="Navigazione principale" className="mt-6 flex-1 space-y-4 overflow-y-auto">
+      {navSections.map((section) => (
+        <NavGroup
+          key={section.id}
+          title={section.title}
+          links={section.links}
+          currentPath={currentPath}
+          isDark={isDark}
+          onLinkClick={onLinkClick}
+          isCollapsed={isCollapsed}
+        />
+      ))}
+    </nav>
+
+    {/* Social Links */}
+    <div className={`mt-6 border-t ${isDark ? "border-white/5" : "border-zinc-200"} pt-4`}>
+      <SocialLinks isDark={isDark} isCollapsed={isCollapsed} />
+    </div>
+
+    {/* Footer Links */}
+    {!isCollapsed && (
+      <div className={`mt-4 border-t ${isDark ? "border-white/5" : "border-zinc-200"} pt-4`}>
+        <SidebarFooterLinks isDark={isDark} onLinkClick={onLinkClick} />
+      </div>
+    )}
+  </>
 );
+
+/* ─── Main Layout ───────────────────────────────────────────────────────── */
 
 export default function MainLayout({
   children,
+  tickerItems,
 }: {
   children: React.ReactNode;
+  tickerItems?: TickerItem[];
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  const [theme, setTheme] = React.useState<"dark" | "light">("dark");
+  const [showWelcomeModal, setShowWelcomeModal] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+
+  // Sync theme from localStorage on mount
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("capibara-theme") as "dark" | "light" | null;
+    if (saved && saved !== theme) setTheme(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("capibara-theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
+  // Welcome modal
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("capibara-welcome-seen")) {
+      setShowWelcomeModal(true);
+    }
+  }, []);
+
+  // Sync sidebar collapsed state
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("capibara-sidebar-collapsed");
+    if (saved) setIsSidebarCollapsed(saved === "true");
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("capibara-sidebar-collapsed", isSidebarCollapsed.toString());
+    }
+  }, [isSidebarCollapsed]);
+
+  // Close mobile menu on navigation
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when mobile menu is open
+  React.useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
+
+  const handleCloseModal = () => {
+    setShowWelcomeModal(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("capibara-welcome-seen", "true");
+    }
+  };
+
+  const isDark = theme === "dark";
+
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white">
-      <aside className="sticky top-0 hidden h-screen w-72 flex-shrink-0 flex-col border-r border-white/5 bg-black/40 px-4 py-6 lg:flex">
-        <Link href="/" className="flex items-center justify-between px-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-              Capibara
-            </p>
-            <p className="text-2xl font-semibold">Media β</p>
-          </div>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-300">
-            Auto
-          </span>
-        </Link>
-        <div className="mt-8 flex-1 space-y-8 overflow-y-auto">
-          <NavGroup links={primaryNav} currentPath={pathname} />
-          <NavGroup title="Community" links={utilityNav} currentPath={pathname} />
-        </div>
-        <div className="mt-4 space-y-3 border-t border-white/5 pt-4 text-xs text-zinc-500">
-          <p>Chi siamo • Contattaci • Diventa partner</p>
-          <p>Privacy • Termini</p>
-        </div>
+    <div
+      data-theme={theme}
+      className={`flex min-h-screen ${isDark ? "bg-[#050505] text-white" : "bg-zinc-50 text-zinc-900"}`}
+    >
+      {/* ── Desktop Sidebar ──────────────────────────────────────────── */}
+      <aside
+        className={`sticky top-0 hidden h-screen flex-shrink-0 flex-col ${
+          isSidebarCollapsed ? "px-2 py-6" : "px-4 py-6"
+        } lg:flex transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? "w-16" : "w-72"
+        } ${isDark ? "border-r border-white/5 bg-zinc-900" : "border-r border-zinc-200 bg-white"}`}
+      >
+        <SidebarContent
+          isDark={isDark}
+          currentPath={pathname}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        />
       </aside>
 
+      {/* ── Mobile Menu ──────────────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-300"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <aside
+            className={`fixed left-0 top-0 z-50 flex h-full w-80 flex-col px-4 py-6 lg:hidden animate-in slide-in-from-left duration-300 ${
+              isDark
+                ? "border-r border-white/5 bg-zinc-900"
+                : "border-r border-zinc-200 bg-white"
+            }`}
+          >
+            <div className="flex items-center justify-end mb-2">
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`p-2 rounded-xl transition ${
+                  isDark
+                    ? "text-zinc-400 hover:bg-white/10 hover:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+                aria-label="Chiudi menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <SidebarContent
+              isDark={isDark}
+              currentPath={pathname}
+              onLinkClick={() => setIsMobileMenuOpen(false)}
+            />
+          </aside>
+        </>
+      )}
+
+      {/* ── Main Content Area ────────────────────────────────────────── */}
       <div className="flex-1">
-        <div className="flex flex-col gap-6 border-b border-white/5 bg-black/30 px-4 py-6 sm:px-6 lg:px-12">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-                Ricorda di attivare le notifiche push
-              </p>
-              <h1 className="text-3xl font-semibold">Capibara Media</h1>
-            </div>
-            <div className="flex gap-3 text-sm">
-              {session ? (
-                <>
-                  <span className="hidden text-zinc-300 sm:inline">
-                    Ciao, {session.user?.name ?? "utente"}
-                  </span>
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="rounded-full border border-white/10 px-4 py-2 text-zinc-300 transition hover:border-white/40 hover:text-white"
-                  >
-                    Esci
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  className="rounded-full bg-white/90 px-4 py-2 font-semibold text-black"
-                >
-                  Accedi
-                </Link>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <form
-              action="/archivio"
-              method="get"
-              className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-            >
-              <Search className="h-4 w-4 text-zinc-500" />
-              <input
-                name="q"
-                type="search"
-                className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
-                placeholder="Cerca episodi, podcast o newsletter"
-              />
-            </form>
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.35em] text-zinc-500">
-              <span>Breaking News</span>
-              <div className="h-px w-10 bg-white/20" />
-              <span>Live 24/7</span>
+        {/* Floating Header */}
+        <div
+          className={`pointer-events-none fixed top-4 z-40 ${
+            isSidebarCollapsed ? "left-16 lg:left-16" : "left-0 lg:left-72"
+          } right-0`}
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-24">
+            <div className={getHeaderStyles(isDark).className} style={getHeaderStyles(isDark).style}>
+              <div className="w-full px-4 sm:px-6 lg:px-8 pointer-events-auto">
+                <div className="flex items-center justify-between w-full gap-2 min-w-0">
+                  {/* Left side */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* Mobile: hamburger + logo */}
+                    <div className="flex items-center gap-2 lg:hidden">
+                      <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className={`flex items-center justify-center w-10 h-10 rounded-xl transition flex-shrink-0 ${
+                          isDark
+                            ? "bg-white/10 text-white hover:bg-white/20"
+                            : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                        }`}
+                        aria-label="Apri menu"
+                      >
+                        {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                      </button>
+                      <Link href="/" className="flex items-center gap-1.5 min-w-0">
+                        <Image
+                          src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+                          alt="Capibara logo"
+                          width={32}
+                          height={32}
+                          className="h-8 w-8 rounded-lg bg-white/5 object-contain p-1 flex-shrink-0"
+                          priority
+                        />
+                        <span
+                          className={`text-sm sm:text-base font-semibold tracking-wide truncate ${
+                            isDark ? "text-black" : "text-zinc-900"
+                          }`}
+                        >
+                          Capibara
+                        </span>
+                      </Link>
+                    </div>
+                    {/* Desktop: mappa + search */}
+                    <Link
+                      href="/conflitti"
+                      className={`hidden lg:flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                        isDark
+                          ? "border border-black/30 text-black hover:border-black/70"
+                          : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
+                      }`}
+                    >
+                      <Map className="h-3.5 w-3.5" />
+                      <span>Mappa dei conflitti</span>
+                    </Link>
+                    <HeaderSearch isDark={isDark} />
+                  </div>
+
+                  {/* Right side */}
+                  <div className="flex items-center gap-2 text-sm min-w-0">
+                    {!session && (
+                      <>
+                        <Link
+                          href="/abbonamenti"
+                          className={`hidden sm:inline-flex rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                            isDark
+                              ? "bg-white/90 text-black hover:bg-white"
+                              : "bg-zinc-900 text-white hover:bg-zinc-800"
+                          }`}
+                        >
+                          Abbonati ora
+                        </Link>
+                        <Link
+                          href="/login"
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                            isDark
+                              ? "border border-black/30 text-black hover:border-black/70"
+                              : "border border-zinc-300 text-zinc-900 hover:border-zinc-900"
+                          }`}
+                        >
+                          Accedi
+                        </Link>
+                      </>
+                    )}
+                    {session && (
+                      <>
+                        <span className={`hidden sm:inline text-xs ${isDark ? "text-black" : "text-zinc-700"}`}>
+                          Ciao, {session.user?.name ?? "utente"}
+                        </span>
+                        <button
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className={`rounded-full px-3 py-1.5 text-xs transition whitespace-nowrap ${
+                            isDark
+                              ? "border border-black/30 text-black hover:border-black/60"
+                              : "border border-zinc-300 text-zinc-800 hover:border-zinc-900 bg-white"
+                          }`}
+                        >
+                          Esci
+                        </button>
+                      </>
+                    )}
+                    {/* Dark/Light toggle — icon only with rotate animation */}
+                    <button
+                      type="button"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="flex items-center justify-center w-9 h-9 rounded-full text-black hover:bg-black/10 transition-colors"
+                      aria-label={isDark ? "Passa a light mode" : "Passa a dark mode"}
+                    >
+                      <div className="relative h-4 w-4">
+                        <Moon
+                          className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                            isDark ? "rotate-0 scale-100 opacity-100" : "rotate-90 scale-0 opacity-0"
+                          }`}
+                        />
+                        <Sun
+                          className={`absolute inset-0 h-4 w-4 transition-all duration-300 ${
+                            isDark ? "-rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
-          {children}
-        </main>
+        {/* Ticker Strip */}
+        {tickerItems && tickerItems.length > 0 && (
+          <div
+            className={`pointer-events-none fixed top-[8rem] sm:top-[7.5rem] z-30 ${
+              isSidebarCollapsed ? "left-0 lg:left-16" : "left-0 lg:left-72"
+            } right-0`}
+          >
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-24">
+              <NewsTicker items={tickerItems} isDark={isDark} />
+            </div>
+          </div>
+        )}
+
+        {/* Spacer */}
+        <div
+          className={
+            tickerItems && tickerItems.length > 0
+              ? "h-52 sm:h-48 lg:h-52"
+              : "h-36 sm:h-36 lg:h-40"
+          }
+        />
+
+        {/* Page Content */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-24">
+          <main className="flex flex-col gap-10 pb-10">{children}</main>
+        </div>
       </div>
+
+      {/* ── Welcome Modal ────────────────────────────────────────────── */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div
+            className={`relative z-10 w-full max-w-lg rounded-3xl border p-8 shadow-2xl ${
+              isDark
+                ? "border-white/10 bg-zinc-900 text-white"
+                : "border-zinc-200 bg-white text-zinc-900"
+            }`}
+          >
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Image
+                  src={isDark ? "/logo_capibara.png" : "/logo_capibara_nero.png"}
+                  alt="Capibara logo"
+                  width={80}
+                  height={80}
+                  className="h-20 w-20 rounded-2xl bg-white/5 object-contain p-2"
+                  priority
+                />
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-semibold">Capibara</h2>
+                  <span className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-black">
+                    Beta
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Stiamo costruendo qualcosa di nuovo</h3>
+                <p className="body-text-lg leading-relaxed">
+                  Benvenuto su Capibara. Stiamo ancora lavorando al sito e stiamo testando
+                  funzionalità, contenuti e design. Alcune cose potrebbero non funzionare
+                  perfettamente o cambiare nel tempo.
+                </p>
+                <p className="body-text leading-relaxed">
+                  Se vuoi darci un feedback o segnalare qualcosa che non va,{" "}
+                  <a
+                    href="#"
+                    className="font-semibold underline hover:opacity-80"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCloseModal();
+                    }}
+                  >
+                    contattaci
+                  </a>
+                  . Il tuo contributo ci aiuta a migliorare.
+                </p>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className={`w-full rounded-full px-6 py-3 font-semibold transition-colors ${
+                  isDark
+                    ? "bg-white text-black hover:bg-zinc-200"
+                    : "bg-zinc-900 text-white hover:bg-zinc-800"
+                }`}
+              >
+                Ho capito, continua
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

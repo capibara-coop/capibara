@@ -1,7 +1,61 @@
-import { getArticles } from "@/lib/api";
+import { getArticles, getLatestArticles, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate } from "@/components/ContentCard";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
+  
+  // Helper per garantire URL assoluto per Open Graph
+  const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
+  };
+  
+  // Ottieni il primo articolo per usare la sua immagine come anteprima
+  const latestArticles = await getLatestArticles(1);
+  let ogImage = `${siteUrl}/logo_capibara.png`;
+  
+  if (latestArticles.length > 0 && latestArticles[0]?.heroImage) {
+    const { url } = extractHeroImage(latestArticles[0].heroImage);
+    const absoluteUrl = ensureAbsoluteUrl(url);
+    if (absoluteUrl) {
+      ogImage = absoluteUrl;
+    }
+  }
+  
+  return {
+    metadataBase: new URL(siteUrl),
+    title: "Articoli",
+    description: "Approfondimenti, analisi e articoli editoriali su lavoro, diritti, conflitti sociali e nuove forme di organizzazione.",
+    openGraph: {
+      type: "website",
+      locale: "it_IT",
+      url: `${siteUrl}/articoli`,
+      siteName: "Capibara",
+      title: "Articoli | Capibara",
+      description: "Approfondimenti, analisi e articoli editoriali su lavoro, diritti, conflitti sociali e nuove forme di organizzazione.",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: "Articoli Capibara",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Articoli | Capibara",
+      description: "Approfondimenti, analisi e articoli editoriali su lavoro, diritti, conflitti sociali e nuove forme di organizzazione.",
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function ArticoliPage({
   searchParams,
@@ -16,34 +70,67 @@ export default async function ArticoliPage({
     <MainLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-4xl font-semibold text-white">Articoli</h1>
-          <p className="mt-2 text-zinc-400">
+          <h1 className="page-title text-4xl font-semibold">Articoli</h1>
+          <p className="body-text mt-2">
             Approfondimenti, analisi e articoli editoriali
           </p>
         </div>
 
         {articles.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/80 p-12 text-center">
-            <p className="text-zinc-400">Nessun articolo disponibile al momento.</p>
+          <div className="content-box p-12 text-center">
+            <p className="body-text">Nessun articolo disponibile al momento.</p>
           </div>
         ) : (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
-                <ContentCard
-                  key={article.slug}
-                  entry={{
-                    title: article.title ?? "Untitled",
-                    date: formatDate(article.publishDate),
-                    summary: article.excerpt ?? "",
-                    tag: "Articolo",
-                    accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
-                    locked: article.isPremium ?? false,
+              {articles.map((article) => {
+                const { url, alt } = extractHeroImage(article.heroImage);
+                // Estrai il nome dell'autore da diverse possibili strutture
+                const authorName = 
+                  article.author?.data?.attributes?.name ||
+                  (article.author as any)?.attributes?.name ||
+                  (article.author as any)?.name ||
+                  null;
+                
+                // Estrai l'avatar dell'autore
+                const authorAvatarData = 
+                  article.author?.data?.attributes?.avatar ||
+                  (article.author as any)?.attributes?.avatar ||
+                  (article.author as any)?.avatar ||
+                  null;
+                const { url: authorAvatarUrl } = extractHeroImage(authorAvatarData);
+
+                // Debug in development
+                if (process.env.NODE_ENV === 'development' && !authorName && article.author) {
+                  console.log('Article author structure:', {
                     slug: article.slug,
-                    type: "article",
-                  }}
-                />
-              ))}
+                    author: article.author,
+                    authorData: (article.author as any)?.data,
+                    authorAttributes: (article.author as any)?.data?.attributes,
+                  });
+                }
+
+                return (
+                  <ContentCard
+                    key={article.slug}
+                    entry={{
+                      title: article.title ?? "Untitled",
+                      date: formatDate(article.publishDate),
+                      summary: article.excerpt ?? "",
+                      tag: "Articolo",
+                      accent: "from-blue-500/30 via-indigo-500/20 to-purple-900/40",
+                      imageUrl: url ?? undefined,
+                      imageAlt: alt ?? article.title,
+                      locked: article.isPremium ?? false,
+                      slug: article.slug,
+                      type: "article",
+                      borderColor: "indigo-500",
+                      authorName: authorName,
+                      authorAvatar: authorAvatarUrl ?? undefined,
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {pagination.pageCount > 1 && (
@@ -51,7 +138,7 @@ export default async function ArticoliPage({
                 {pagination.page > 1 && (
                   <Link
                     href={`/articoli?page=${pagination.page - 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     ← Precedente
                   </Link>
@@ -62,7 +149,7 @@ export default async function ArticoliPage({
                 {pagination.page < pagination.pageCount && (
                   <Link
                     href={`/articoli?page=${pagination.page + 1}`}
-                    className="rounded-full border border-white/10 px-6 py-2 text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+                    className="pagination-button"
                   >
                     Successiva →
                   </Link>

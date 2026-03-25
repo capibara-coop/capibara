@@ -1,8 +1,108 @@
 import { notFound } from "next/navigation";
-import { getArticleBySlug } from "@/lib/api";
+import { getArticleBySlug, getStrapiMediaUrl, extractHeroImage, type Author } from "@/lib/api";
+import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
-import { Clock } from "lucide-react";
+import { Clock, Instagram, Linkedin, Globe, Music2 } from "lucide-react";
+import Image from "next/image";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getArticleBySlug(slug);
+
+  if (!article) {
+    return {
+      title: "Articolo non trovato",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
+  const articleUrl = `${siteUrl}/articoli/${slug}`;
+  
+  // Helper per garantire URL assoluto per Open Graph
+  const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    // Se è un path relativo, costruisci URL assoluto
+    return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
+  };
+  
+  // Usa metaImage dal SEO se disponibile, altrimenti heroImage, altrimenti logo
+  const seoImageUrl = article.seo?.metaImage?.data?.attributes?.url
+    ? ensureAbsoluteUrl(getStrapiMediaUrl(article.seo.metaImage.data.attributes.url))
+    : null;
+  const { url: heroImageUrl } = extractHeroImage(article.heroImage);
+  const imageUrl = seoImageUrl || ensureAbsoluteUrl(heroImageUrl) || `${siteUrl}/logo_capibara.png`;
+
+  // Usa metaTitle dal SEO se disponibile, altrimenti title
+  const metaTitle = article.seo?.metaTitle || article.title;
+  
+  // Usa metaDescription dal SEO se disponibile, altrimenti excerpt, altrimenti body
+  const description = article.seo?.metaDescription || article.excerpt || article.body?.substring(0, 160) || "Leggi l'articolo completo su Capibara";
+
+  // Usa keywords dal SEO se disponibile (stringa separata da virgole), altrimenti tags
+  const seoKeywords = article.seo?.keywords
+    ? article.seo.keywords.split(',').map(k => k.trim()).filter(Boolean)
+    : [];
+  const tagKeywords = article.tags?.data?.map((tag) => tag.attributes.name) || [];
+  const keywords = seoKeywords.length > 0 ? seoKeywords : tagKeywords;
+
+  // Estrai l'autore da diverse possibili strutture
+  const author: Author | undefined =
+    article.author?.data?.attributes ||
+    (article.author as any)?.attributes ||
+    (article.author as any) ||
+    undefined;
+
+  // Se preventIndexing è true, aggiungi noindex
+  const robots = article.seo?.preventIndexing
+    ? { index: false, follow: false }
+    : { index: true, follow: true };
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: metaTitle,
+    description,
+    keywords,
+    authors: author ? [{ name: author.name }] : undefined,
+    robots,
+    openGraph: {
+      type: "article",
+      locale: "it_IT",
+      url: articleUrl,
+      siteName: "Capibara",
+      title: metaTitle,
+      description,
+      publishedTime: article.publishDate || undefined,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.seo?.metaImage?.data?.attributes?.alternativeText || 
+               article.heroImage?.data?.attributes?.alternativeText || 
+               article.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: metaTitle,
+      description,
+      images: [imageUrl],
+    },
+    alternates: {
+      canonical: articleUrl,
+    },
+  };
+}
 
 export default async function ArticlePage({
   params,
@@ -12,33 +112,177 @@ export default async function ArticlePage({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
 
+  // Debug logging
+  console.log('Article data:', {
+    slug,
+    articleExists: !!article,
+    title: article?.title,
+    body: article?.body,
+    bodyLength: article?.body?.length,
+    bodyType: typeof article?.body
+  });
+
   if (!article) {
     notFound();
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
+  const articleUrl = `${siteUrl}/articoli/${slug}`;
+  const imageUrl = article.heroImage?.data?.attributes?.url
+    ? getStrapiMediaUrl(article.heroImage.data.attributes.url) || `${siteUrl}${article.heroImage.data.attributes.url}`
+    : `${siteUrl}/logo_capibara.png`;
+
+  // Estrai l'autore da diverse possibili strutture
+  const author: Author | undefined =
+    article.author?.data?.attributes ||
+    (article.author as any)?.attributes ||
+    (article.author as any) ||
+    undefined;
+  
+  // Debug in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Article author structure:', {
+      slug,
+      hasAuthor: !!article.author,
+      author: article.author,
+      authorData: (article.author as any)?.data,
+      authorAttributes: (article.author as any)?.data?.attributes,
+      extractedAuthor: author,
+      hasAvatar: !!(author?.avatar),
+    });
+  }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt || article.body?.substring(0, 160) || "",
+    image: imageUrl,
+    datePublished: article.publishDate || undefined,
+    author: author
+      ? {
+          "@type": "Person",
+          name: author.name,
+        }
+      : {
+          "@type": "Organization",
+          name: "Capibara",
+        },
+    publisher: {
+      "@type": "Organization",
+      name: "Capibara",
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/logo_capibara.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
+    keywords: article.tags?.data?.map((tag) => tag.attributes.name).join(", ") || undefined,
+  };
+
   return (
     <MainLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="space-y-8">
         <Link
           href="/articoli"
-          className="inline-flex items-center text-sm text-zinc-400 transition hover:text-white"
+          className="back-link"
         >
           ← Torna agli articoli
         </Link>
 
         <article className="space-y-8">
           <div>
-            <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide text-zinc-400">
+            <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide meta-text">
               <span>Articolo</span>
               {article.isPremium && (
-                <span className="rounded-full bg-amber-400/10 px-3 py-0.5 text-xs text-amber-200">
+                <span className="locked-badge">
                   Abbonati
                 </span>
               )}
             </div>
-            <h1 className="text-4xl font-semibold leading-tight text-white">
+            <h1 className="page-title text-4xl font-semibold leading-tight">
               {article.title}
             </h1>
+            {author && (
+              <div className="mt-4 flex items-center gap-2 text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">di</span>
+                {author.avatar && (
+                  <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-zinc-700 overflow-hidden flex items-center justify-center shrink-0">
+                    <Image
+                      src={extractHeroImage(author.avatar).url ?? ""}
+                      alt={author.name}
+                      width={24}
+                      height={24}
+                      className="w-full h-full object-contain translate-y-1.5 scale-110"
+                      unoptimized={extractHeroImage(author.avatar).url?.includes('localhost') || extractHeroImage(author.avatar).url?.includes('127.0.0.1')}
+                    />
+                  </div>
+                )}
+                <span className="font-medium author-name">{author.name}</span>
+              </div>
+            )}
+            {author && author.bio && (
+              <p className="mt-3 max-w-xl text-xs text-zinc-500 dark:text-zinc-400">
+                {author.bio}
+              </p>
+            )}
+            {author && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+                <div className="flex items-center gap-2">
+                  {author.instagram && (
+                    <a
+                      href={author.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="Instagram"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.tiktok && (
+                    <a
+                      href={author.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="TikTok"
+                    >
+                      <Music2 className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.linkedin && (
+                    <a
+                      href={author.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="LinkedIn"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+                  )}
+                  {author.website && (
+                    <a
+                      href={author.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      aria-label="Sito personale"
+                    >
+                      <Globe className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-zinc-500">
               {article.publishDate && (
                 <span className="uppercase tracking-wide">
@@ -55,39 +299,50 @@ export default async function ArticlePage({
                   {article.readingTime} min di lettura
                 </span>
               )}
-              {article.author && (
-                <span>di {article.author}</span>
-              )}
             </div>
           </div>
 
           {article.excerpt && (
-            <p className="text-lg text-zinc-300">{article.excerpt}</p>
+            <p className="article-excerpt">{article.excerpt}</p>
           )}
 
           {article.heroImage?.data?.attributes?.url && (
             <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
               <img
-                src={`${process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337"}${article.heroImage.data.attributes.url}`}
+                src={
+                  getStrapiMediaUrl(article.heroImage.data.attributes.url) ??
+                  article.heroImage.data.attributes.url
+                }
                 alt={article.heroImage.data.attributes.alternativeText || article.title}
                 className="h-full w-full object-cover"
               />
             </div>
           )}
 
-          {article.body && (
+          {article.body ? (
             <div
-              className="prose prose-invert max-w-none text-zinc-300 prose-headings:text-white prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-code:text-blue-400"
-              dangerouslySetInnerHTML={{ __html: article.body }}
+              className="article-prose"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(article.body) }}
             />
+          ) : (
+            <div className="article-prose">
+              <p><em>Contenuto dell'articolo non disponibile.</em></p>
+              <p><strong>Debug info:</strong></p>
+              <ul>
+                <li>Title: {article.title}</li>
+                <li>Body type: {typeof article.body}</li>
+                <li>Body value: {JSON.stringify(article.body)}</li>
+                <li>Body length: {article.body?.length || 0}</li>
+              </ul>
+            </div>
           )}
 
           {article.tags?.data && article.tags.data.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-8 border-t border-white/10">
+            <div className="article-tags-container">
               {article.tags.data.map((tag) => (
                 <span
                   key={tag.attributes.slug}
-                  className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-300"
+                  className="article-tag"
                 >
                   {tag.attributes.name}
                 </span>

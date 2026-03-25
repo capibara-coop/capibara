@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-const handler = NextAuth({
+const { handlers } = NextAuth({
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -9,6 +9,7 @@ const handler = NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Required for NextAuth v5 in production
   session: {
     strategy: "jwt",
   },
@@ -26,8 +27,12 @@ const handler = NextAuth({
       return session;
     },
   },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
 });
 
-export { handler as GET, handler as POST };
+export const { GET, POST } = handlers;
 
 

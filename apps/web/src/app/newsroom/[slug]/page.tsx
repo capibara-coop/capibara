@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { getNewsletterIssueBySlug } from "@/lib/api";
+import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 import MainLayout from "@/components/MainLayout";
 
-export default async function NewsletterIssuePage({
+export default async function NewsroomIssuePage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -20,22 +21,22 @@ export default async function NewsletterIssuePage({
       <div className="space-y-8">
         <Link
           href="/"
-          className="inline-flex items-center text-sm text-zinc-400 transition hover:text-white"
+          className="back-link"
         >
           ← Torna alla home
         </Link>
 
         <article className="space-y-8">
           <div>
-            <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide text-zinc-400">
-              <span>Newsletter</span>
+            <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide meta-text">
+              <span>Newsroom</span>
               {issue.isPremium && (
-                <span className="rounded-full bg-amber-400/10 px-3 py-0.5 text-xs text-amber-200">
+                <span className="locked-badge">
                   Abbonati
                 </span>
               )}
             </div>
-            <h1 className="text-4xl font-semibold leading-tight text-white">
+            <h1 className="page-title text-4xl font-semibold leading-tight">
               {issue.title}
             </h1>
             {issue.publishDate && (
@@ -50,13 +51,13 @@ export default async function NewsletterIssuePage({
           </div>
 
           {issue.excerpt && (
-            <p className="text-lg text-zinc-300">{issue.excerpt}</p>
+            <p className="article-excerpt">{issue.excerpt}</p>
           )}
 
           {issue.body && (
             <div
-              className="prose prose-invert max-w-none text-zinc-300"
-              dangerouslySetInnerHTML={{ __html: issue.body }}
+              className="article-prose"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(issue.body) }}
             />
           )}
         </article>
