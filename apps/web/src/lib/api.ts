@@ -225,7 +225,7 @@ type EpisodeBase = {
   } | null;
   show?: {
     data: {
-      attributes: Pick<Show, "title" | "slug" | "kind">;
+      attributes: Pick<Show, "title" | "slug" | "kind" | "cover">;
     } | null;
   };
   seo?: SeoComponent | null;
@@ -241,6 +241,15 @@ type VideoEpisode = EpisodeBase & {
 
 type PodcastEpisode = EpisodeBase & {
   durationSeconds?: number | null;
+  audioFile?: {
+    data: {
+      attributes: {
+        url: string;
+        alternativeText?: string | null;
+        mime?: string | null;
+      };
+    };
+  } | null;
   spotifyLink?: string | null;
   appleLink?: string | null;
   youtubeLink?: string | null;
@@ -434,6 +443,135 @@ type Event = {
   seo?: SeoComponent | null;
 };
 
+export function extractMedia(
+  media: unknown,
+): { url: string | null; alt: string | null } {
+  return extractHeroImage(media);
+}
+
+function getEpisodeShowAttributes(
+  episode: Pick<PodcastEpisode, "show">,
+): Pick<Show, "title" | "slug" | "kind" | "cover"> | null {
+  const show = episode.show as
+    | {
+        data?: { attributes?: Pick<Show, "title" | "slug" | "kind" | "cover"> };
+        attributes?: Pick<Show, "title" | "slug" | "kind" | "cover">;
+      }
+    | Pick<Show, "title" | "slug" | "kind" | "cover">
+    | null
+    | undefined;
+
+  if (!show) return null;
+  if ("data" in show && show.data?.attributes) return show.data.attributes;
+  if ("attributes" in show && show.attributes) return show.attributes;
+  if ("title" in show && show.title) {
+    return show as Pick<Show, "title" | "slug" | "kind" | "cover">;
+  }
+  return null;
+}
+
+/** Immagine episodio podcast: sempre la cover dello show di appartenenza. */
+export function extractPodcastEpisodeImage(
+  episode: Pick<PodcastEpisode, "show" | "title">,
+): { url: string | null; alt: string | null } {
+  const showAttrs = getEpisodeShowAttributes(episode);
+  const { url, alt } = extractHeroImage(showAttrs?.cover);
+  return {
+    url,
+    alt: alt ?? showAttrs?.title ?? episode.title ?? null,
+  };
+}
+
+const podcastEpisodePopulateQuery = {
+  "populate[0]": "show",
+  "populate[1]": "show.cover",
+  "populate[2]": "audioFile",
+  "populate[3]": "seo",
+  "populate[4]": "seo.metaImage",
+};
+
+export function formatDuration(seconds?: number | null): string {
+  if (!seconds || seconds <= 0) return "";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export async function getPodcastShows(page = 1, pageSize = 24) {
+  const response = await strapiFetch<StrapiPaginatedResponse<Show>>(
+    "/api/shows",
+    {
+      query: {
+        "populate[0]": "cover",
+        "filters[kind][$eq]": "podcast",
+        "publicationState": "live",
+        "pagination[page]": page,
+        "pagination[pageSize]": pageSize,
+        "sort[0]": "title:asc",
+      },
+      revalidate: 300,
+    },
+  );
+
+  const shows = (response.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as Show[];
+
+  return {
+    data: shows,
+    pagination: response.meta?.pagination ?? {
+      page: 1,
+      pageSize,
+      pageCount: 1,
+      total: shows.length,
+    },
+  };
+}
+
+export async function getPodcastShowBySlug(slug: string) {
+  const [showResponse, episodesResponse] = await Promise.all([
+    strapiFetch<StrapiCollectionResponse<Show>>("/api/shows", {
+      query: {
+        "populate[0]": "cover",
+        "filters[slug][$eq]": slug,
+        "filters[kind][$eq]": "podcast",
+        "publicationState": "live",
+      },
+      revalidate: 3600,
+    }),
+    strapiFetch<StrapiCollectionResponse<PodcastEpisode>>(
+      "/api/podcast-episodes",
+      {
+        query: {
+          "populate[0]": "show",
+          "populate[1]": "show.cover",
+          "filters[show][slug][$eq]": slug,
+          "publicationState": "live",
+          "sort[0]": "publishDate:desc",
+          "pagination[pageSize]": 100,
+        },
+        revalidate: 3600,
+      },
+    ),
+  ]);
+
+  const showRaw = showResponse.data?.[0];
+  const show = (showRaw?.attributes ?? showRaw) as Show | undefined;
+  if (!show) return null;
+
+  const episodes = (episodesResponse.data?.map((item) => {
+    if (item.attributes) return item.attributes;
+    return item;
+  }) ?? []) as PodcastEpisode[];
+
+  return { ...show, episodes };
+}
+
 export async function getFeaturedShows(limit = 4) {
   const response = await strapiFetch<StrapiCollectionResponse<Show>>(
     "/api/shows",
@@ -492,7 +630,7 @@ export async function getLatestPodcastEpisodes(limit = 4) {
     "/api/podcast-episodes",
     {
       query: {
-        populate: "*",
+        ...podcastEpisodePopulateQuery,
         "publicationState": "live",
         "pagination[pageSize]": limit,
         "sort[0]": "publishDate:desc",
@@ -562,7 +700,7 @@ export async function getPodcastEpisodeBySlug(slug: string) {
     "/api/podcast-episodes",
     {
       query: {
-        populate: "*",
+        ...podcastEpisodePopulateQuery,
         "publicationState": "live",
         "filters[slug][$eq]": slug,
       },
@@ -746,7 +884,7 @@ export async function getPodcastEpisodes(page = 1, pageSize = 12) {
     "/api/podcast-episodes",
     {
       query: {
-        populate: "*",
+        ...podcastEpisodePopulateQuery,
         "publicationState": "live",
         "pagination[page]": page,
         "pagination[pageSize]": pageSize,
@@ -1046,7 +1184,7 @@ export async function searchContent(query: string, page = 1, pageSize = 12) {
       "/api/podcast-episodes",
       {
         query: {
-          populate: "*",
+          ...podcastEpisodePopulateQuery,
           "publicationState": "live",
           "filters[$or][0][title][$containsi]": searchQuery,
           "filters[$or][1][summary][$containsi]": searchQuery,

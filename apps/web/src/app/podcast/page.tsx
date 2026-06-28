@@ -1,58 +1,40 @@
-import { getPodcastEpisodes, getLatestPodcastEpisodes, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
+import { getPodcastShows, getPodcastEpisodes } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
-import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
-import type { Show } from "@/lib/api";
+import ShowCard from "@/components/ShowCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
-  
-  // Helper per garantire URL assoluto per Open Graph
-  const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return url;
-    }
-    return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
-  };
-  
-  // Ottieni il primo podcast per usare la sua immagine come anteprima
-  const latestPodcasts = await getLatestPodcastEpisodes(1);
+  const { data: shows } = await getPodcastShows(1, 1);
+
   let ogImage = `${siteUrl}/logo_capibara.png`;
-  
-  if (latestPodcasts.length > 0 && latestPodcasts[0]?.heroImage) {
-    const { url } = extractHeroImage(latestPodcasts[0].heroImage);
-    const absoluteUrl = ensureAbsoluteUrl(url);
-    if (absoluteUrl) {
-      ogImage = absoluteUrl;
-    }
+  const firstShow = shows[0];
+  if (firstShow?.cover?.data?.attributes?.url) {
+    const url = firstShow.cover.data.attributes.url;
+    ogImage = url.startsWith("http") ? url : `${siteUrl}${url}`;
   }
-  
+
   return {
     metadataBase: new URL(siteUrl),
     title: "Podcast",
-    description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+    description:
+      "I podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
     openGraph: {
       type: "website",
       locale: "it_IT",
       url: `${siteUrl}/podcast`,
       siteName: "Capibara",
       title: "Podcast | Capibara",
-      description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: "Podcast Capibara",
-        },
-      ],
+      description:
+        "I podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: "Podcast Capibara" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Podcast | Capibara",
-      description: "Tutti gli episodi podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
+      description:
+        "I podcast di Capibara: approfondimenti, interviste e storie su lavoro, diritti e conflitti sociali.",
       images: [ogImage],
     },
   };
@@ -65,7 +47,19 @@ export default async function PodcastPage({
 }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
-  const { data: episodes, pagination } = await getPodcastEpisodes(page, 12);
+
+  const [{ data: shows, pagination }, { data: allEpisodes }] = await Promise.all([
+    getPodcastShows(page, 24),
+    getPodcastEpisodes(1, 200),
+  ]);
+
+  const episodeCountByShow = allEpisodes.reduce<Record<string, number>>((acc, ep) => {
+    const showSlug = ep.show?.data?.attributes?.slug;
+    if (showSlug) {
+      acc[showSlug] = (acc[showSlug] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
 
   return (
     <MainLayout>
@@ -73,46 +67,25 @@ export default async function PodcastPage({
         <div>
           <h1 className="page-title text-4xl font-semibold">Podcast</h1>
           <p className="body-text mt-2">
-            {episodes.length > 0 && episodes[0]?.show?.data?.attributes?.title
-              ? `Tutti gli episodi podcast di ${episodes[0].show.data.attributes.title}`
-              : "Tutti gli episodi podcast"}
+            Scegli uno show e ascolta gli episodi direttamente qui.
           </p>
         </div>
 
-        {episodes.length === 0 ? (
+        {shows.length === 0 ? (
           <div className="content-box p-12 text-center">
-            <p className="body-text">Nessun podcast disponibile al momento.</p>
+            <p className="body-text">Nessuno show podcast disponibile al momento.</p>
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {episodes.map((episode) => {
-                const showData = episode.show?.data;
-                const showKind = 
-                  (showData?.attributes?.kind as Show["kind"]) ?? "podcast";
-                const accent = getKindAccent(showKind);
-
-                const { url, alt } = extractHeroImage(episode.heroImage);
-
-                return (
-                  <ContentCard
-                    key={episode.slug}
-                    entry={{
-                      title: episode.title ?? "Untitled",
-                      date: formatDate(episode.publishDate),
-                      summary: episode.summary ?? episode.synopsis ?? "",
-                      tag: "Podcast",
-                      accent,
-                      imageUrl: url ?? undefined,
-                      imageAlt: alt ?? episode.title,
-                      locked: episode.isPremium ?? false,
-                      slug: episode.slug,
-                      type: "podcast",
-                      borderColor: "teal-500",
-                    }}
-                  />
-                );
-              })}
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {shows.map((show) => (
+                <ShowCard
+                  key={show.slug}
+                  show={show}
+                  href={`/podcast/show/${show.slug}`}
+                  episodeCount={episodeCountByShow[show.slug]}
+                />
+              ))}
             </div>
 
             {pagination.pageCount > 1 && (
@@ -144,4 +117,3 @@ export default async function PodcastPage({
     </MainLayout>
   );
 }
-

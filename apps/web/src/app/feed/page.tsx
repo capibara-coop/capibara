@@ -4,6 +4,7 @@ import {
   getPremiumNewsletterIssues,
   getLatestArticles,
   extractHeroImage,
+  extractPodcastEpisodeImage,
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
@@ -144,6 +145,13 @@ export default async function FeedPage() {
                         return {
                           imageUrl: previewImageUrl ?? heroImageUrl ?? undefined,
                           imageAlt: heroImageAlt ?? item.title ?? "Video",
+                        };
+                      }
+                      if (item.contentType === "podcast") {
+                        const { url, alt } = extractPodcastEpisodeImage(item);
+                        return {
+                          imageUrl: url ?? undefined,
+                          imageAlt: alt ?? item.title ?? "Podcast",
                         };
                       }
                       // Per altri contenuti, usa hero image

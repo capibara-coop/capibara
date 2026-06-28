@@ -1,8 +1,17 @@
 import { notFound } from "next/navigation";
-import { getPodcastEpisodeBySlug, extractHeroImage, getStrapiMediaUrl } from "@/lib/api";
+import Image from "next/image";
 import Link from "next/link";
+import {
+  getPodcastEpisodeBySlug,
+  extractMedia,
+  extractPodcastEpisodeImage,
+  formatDuration,
+  getStrapiMediaUrl,
+} from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import PodcastPlatformButtons from "@/components/PodcastPlatformButtons";
+import PodcastPlayer from "@/components/PodcastPlayer";
+import { formatDate } from "@/components/ContentCard";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -14,38 +23,35 @@ export async function generateMetadata({
   const episode = await getPodcastEpisodeBySlug(slug);
 
   if (!episode) {
-    return {
-      title: "Podcast non trovato",
-    };
+    return { title: "Podcast non trovato" };
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
   const podcastUrl = `${siteUrl}/podcast/${slug}`;
-  
-  // Helper per garantire URL assoluto per Open Graph
+
   const ensureAbsoluteUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return url;
-    }
-    // Se è un path relativo, costruisci URL assoluto
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
     return url.startsWith("/") ? `${siteUrl}${url}` : `${siteUrl}/${url}`;
   };
-  
-  // Usa metaImage dal SEO se disponibile, altrimenti heroImage, altrimenti logo
+
   const seoImageUrl = episode.seo?.metaImage?.data?.attributes?.url
     ? ensureAbsoluteUrl(getStrapiMediaUrl(episode.seo.metaImage.data.attributes.url))
     : null;
-  const { url: heroImageUrl } = extractHeroImage(episode.heroImage);
-  const finalImageUrl = seoImageUrl || ensureAbsoluteUrl(heroImageUrl) || `${siteUrl}/logo_capibara.png`;
 
-  // Usa metaTitle dal SEO se disponibile, altrimenti title
+  const { url: showCoverUrl } = extractPodcastEpisodeImage(episode);
+  const finalImageUrl =
+    seoImageUrl ??
+    ensureAbsoluteUrl(showCoverUrl) ??
+    `${siteUrl}/logo_capibara.png`;
+
   const metaTitle = episode.seo?.metaTitle || episode.title;
-  
-  // Usa metaDescription dal SEO se disponibile, altrimenti synopsis/summary
-  const description = episode.seo?.metaDescription || episode.synopsis || episode.summary || "Ascolta il podcast completo su Capibara";
+  const description =
+    episode.seo?.metaDescription ||
+    episode.synopsis ||
+    episode.summary ||
+    "Ascolta il podcast completo su Capibara";
 
-  // Se preventIndexing è true, aggiungi noindex
   const robots = episode.seo?.preventIndexing
     ? { index: false, follow: false }
     : { index: true, follow: true };
@@ -77,9 +83,7 @@ export async function generateMetadata({
       description,
       images: [finalImageUrl],
     },
-    alternates: {
-      canonical: podcastUrl,
-    },
+    alternates: { canonical: podcastUrl },
   };
 }
 
@@ -95,40 +99,44 @@ export default async function PodcastEpisodePage({
     notFound();
   }
 
+  const showSlug = episode.show?.data?.attributes?.slug;
+  const showTitle = episode.show?.data?.attributes?.title;
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://capibara.media";
-  const podcastPageUrl = `${siteUrl}/podcast/${slug}`;
-  const { url: imageUrl } = extractHeroImage(episode.heroImage);
-  const finalImageUrl = imageUrl || `${siteUrl}/logo_capibara.png`;
+  const { url: audioUrl } = extractMedia(episode.audioFile);
+  const { url: coverUrl, alt: coverAlt } = extractPodcastEpisodeImage(episode);
+  const episodeImage = coverUrl ?? `${siteUrl}/logo_capibara.png`;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "PodcastEpisode",
     name: episode.title,
     description: episode.synopsis || episode.summary || "",
-    image: finalImageUrl,
+    image: episodeImage,
     datePublished: episode.publishDate || undefined,
     duration: episode.durationSeconds
       ? `PT${Math.floor(episode.durationSeconds / 60)}M${episode.durationSeconds % 60}S`
       : undefined,
     partOfSeries: {
       "@type": "PodcastSeries",
-      name: episode.show?.data?.attributes?.title || "Capibara Podcast",
+      name: showTitle || "Capibara Podcast",
     },
     publisher: {
       "@type": "Organization",
       name: "Capibara",
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteUrl}/logo_capibara.png`,
-      },
+      logo: { "@type": "ImageObject", url: `${siteUrl}/logo_capibara.png` },
     },
-    ...(episode.spotifyLink && {
+    ...(audioUrl && {
       associatedMedia: {
         "@type": "MediaObject",
-        contentUrl: episode.spotifyLink,
+        contentUrl: audioUrl,
+        encodingFormat: "audio/mpeg",
       },
     }),
   };
+
+  const hasExternalLinks =
+    episode.spotifyLink || episode.appleLink || episode.youtubeLink;
 
   return (
     <MainLayout>
@@ -137,56 +145,85 @@ export default async function PodcastEpisodePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="space-y-8">
-        <Link
-          href="/"
-          className="back-link"
-        >
-          ← Torna alla home
-        </Link>
+        {showSlug ? (
+          <Link href={`/podcast/show/${showSlug}`} className="back-link">
+            ← {showTitle ?? "Torna allo show"}
+          </Link>
+        ) : (
+          <Link href="/podcast" className="back-link">
+            ← Tutti i podcast
+          </Link>
+        )}
 
         <article className="space-y-8">
-          <div>
-            <div className="mb-4 flex items-center gap-2 text-sm uppercase tracking-wide meta-text">
-              <span>Podcast</span>
-              {episode.isPremium && (
-                <span className="locked-badge">
-                  Abbonati
-                </span>
-              )}
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500/30 via-sky-500/20 to-blue-900/40 shadow-lg">
+              <Image
+                src={episodeImage}
+                alt={coverAlt ?? showTitle ?? episode.title}
+                fill
+                className="object-cover"
+                sizes="160px"
+                priority
+              />
             </div>
-            <h1 className="page-title text-4xl font-semibold leading-tight">
-              {episode.title}
-            </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm uppercase tracking-wide text-zinc-500">
-              {episode.publishDate && (
-                <p>
-                  {new Date(episode.publishDate).toLocaleDateString("it-IT", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-              )}
-              {episode.durationSeconds && (
-                <p>
-                  {Math.floor(episode.durationSeconds / 60)} min
-                </p>
-              )}
+            <div className="min-w-0 flex-1">
+              <div className="mb-3 flex items-center gap-2 text-sm uppercase tracking-wide meta-text">
+                <span>Podcast</span>
+                {showTitle && (
+                  <>
+                    <span className="text-zinc-600">·</span>
+                    <span className="text-teal-400">{showTitle}</span>
+                  </>
+                )}
+                {episode.isPremium && (
+                  <span className="locked-badge">Abbonati</span>
+                )}
+              </div>
+              <h1 className="page-title text-3xl font-semibold leading-tight sm:text-4xl">
+                {episode.title}
+              </h1>
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-zinc-500">
+                {episode.publishDate && (
+                  <p>{formatDate(episode.publishDate)}</p>
+                )}
+                {episode.durationSeconds ? (
+                  <p>{formatDuration(episode.durationSeconds)}</p>
+                ) : null}
+              </div>
             </div>
           </div>
 
           {episode.summary && (
-            <p className="article-excerpt">{episode.summary}</p>
+            <p className="article-excerpt text-lg">{episode.summary}</p>
           )}
 
-          <PodcastPlatformButtons
-            spotifyLink={episode.spotifyLink}
-            appleLink={episode.appleLink}
-            youtubeLink={episode.youtubeLink}
-          />
+          {audioUrl ? (
+            <PodcastPlayer
+              audioUrl={audioUrl}
+              title={episode.title}
+              durationSeconds={episode.durationSeconds}
+            />
+          ) : (
+            <div className="rounded-3xl border border-white/10 bg-zinc-900/40 p-6 text-center">
+              <p className="body-text text-sm">
+                L&apos;audio non è ancora disponibile su Capibara.
+                {hasExternalLinks
+                  ? " Ascolta l'episodio su una delle piattaforme qui sotto."
+                  : ""}
+              </p>
+            </div>
+          )}
+
+          {hasExternalLinks && (
+            <PodcastPlatformButtons
+              spotifyLink={episode.spotifyLink}
+              appleLink={episode.appleLink}
+              youtubeLink={episode.youtubeLink}
+            />
+          )}
         </article>
       </div>
     </MainLayout>
   );
 }
-

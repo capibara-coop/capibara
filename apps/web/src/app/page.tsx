@@ -6,6 +6,7 @@ import {
   getLatestRubricaLinks,
   getRecentlyUpdatedColumns,
   extractHeroImage,
+  extractPodcastEpisodeImage,
   type Show,
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
@@ -624,7 +625,7 @@ export default async function Home() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {validPodcastDrops.map((podcast) => {
-                const { url, alt } = extractHeroImage(podcast.heroImage);
+                const { url, alt } = extractPodcastEpisodeImage(podcast);
                 return (
                   <ContentCard
                     key={podcast.slug}
