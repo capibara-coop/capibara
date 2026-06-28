@@ -1,16 +1,17 @@
 import {
   getLatestPodcastEpisodes,
+  getPodcastShows,
   getLatestVideoEpisodes,
   getPremiumNewsletterIssues,
   getLatestArticles,
   getLatestRubricaLinks,
   getRecentlyUpdatedColumns,
   extractHeroImage,
-  extractPodcastEpisodeImage,
   type Show,
 } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import ContentCard, { formatDate, getKindAccent } from "@/components/ContentCard";
+import ShowCard from "@/components/ShowCard";
 import { extractAuthorData } from "@/components/RubricaCard";
 import { toYoutubeEmbedUrl, getYoutubeThumbnailUrl, getVideoPreviewImageUrl } from "@/lib/youtube";
 import { markdownToHtml } from "@/lib/markdown";
@@ -88,10 +89,11 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function Home() {
-  const [videoEpisodes, latestVideo, podcastDrops, premiumLetters, articles, latestRubricaLinks, recentlyUpdatedColumns] = await Promise.all([
+  const [videoEpisodes, latestVideo, podcastShows, latestPodcastEpisodes, premiumLetters, articles, latestRubricaLinks, recentlyUpdatedColumns] = await Promise.all([
     getLatestVideoEpisodes(3),
     getLatestVideoEpisodes(1), // Ultimo video per la sezione dedicata
-    getLatestPodcastEpisodes(4),
+    getPodcastShows(1, 4),
+    getLatestPodcastEpisodes(4), // solo per il ticker
     getPremiumNewsletterIssues(3),
     getLatestArticles(4),
     getLatestRubricaLinks(20), // Recupera molti link per garantire sempre 4 card in homepage
@@ -101,7 +103,8 @@ export default async function Home() {
   // Filter out any undefined/null episodes
   const validVideoEpisodes = videoEpisodes.filter((ep) => ep != null);
   const latestVideoEpisode = latestVideo.length > 0 ? latestVideo[0] : null;
-  const validPodcastDrops = podcastDrops.filter((ep) => ep != null);
+  const validPodcastShows = podcastShows.data.filter((show) => show != null);
+  const validPodcastEpisodes = latestPodcastEpisodes.filter((ep) => ep != null);
   const validPremiumLetters = premiumLetters.filter((ep) => ep != null);
   const validArticles = articles.filter((art) => art != null);
 
@@ -182,7 +185,7 @@ export default async function Home() {
       href: `/video/${v.slug}`,
       date: v.publishDate ? new Date(v.publishDate).getTime() : 0,
     })),
-    ...validPodcastDrops.map((p) => ({
+    ...validPodcastEpisodes.map((p) => ({
       title: p.title ?? "Podcast",
       href: `/podcast/${p.slug}`,
       date: p.publishDate ? new Date(p.publishDate).getTime() : 0,
@@ -611,40 +614,26 @@ export default async function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           SEZIONE 5 — SCOPRI (podcast + newsletter + mappa conflitti)
           ═══════════════════════════════════════════════════════════════ */}
-      <section className={`grid gap-6 ${validPodcastDrops.length > 0 ? "lg:grid-cols-[1.25fr_0.75fr]" : "lg:grid-cols-1"}`}>
-        {validPodcastDrops.length > 0 && (
+      <section className={`grid gap-6 ${validPodcastShows.length > 0 ? "lg:grid-cols-[1.25fr_0.75fr]" : "lg:grid-cols-1"}`}>
+        {validPodcastShows.length > 0 && (
           <div className="space-y-5 rounded-3xl border border-white/10 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="eyebrow eyebrow--podcast mb-1">Podcast</p>
-                <h3 className="type-section section-heading">
-                  {validPodcastDrops[0]?.show?.data?.attributes?.title || "Podcast"}
-                </h3>
+                <h3 className="type-section section-heading">I nostri show</h3>
               </div>
-              <span className="rss-badge">Feed RSS</span>
+              <Link href="/podcast" className="rss-badge hover:opacity-80 transition-opacity">
+                Vedi tutti →
+              </Link>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {validPodcastDrops.map((podcast) => {
-                const { url, alt } = extractPodcastEpisodeImage(podcast);
-                return (
-                  <ContentCard
-                    key={podcast.slug}
-                    entry={{
-                      title: podcast.title ?? "Untitled",
-                      date: formatDate(podcast.publishDate),
-                      summary: podcast.summary ?? podcast.synopsis ?? "",
-                      tag: "Podcast",
-                      accent: getKindAccent("podcast"),
-                      imageUrl: url ?? undefined,
-                      imageAlt: alt ?? podcast.title,
-                      locked: podcast.isPremium ?? false,
-                      slug: podcast.slug,
-                      type: "podcast",
-                      borderColor: "teal-500",
-                    }}
-                  />
-                );
-              })}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {validPodcastShows.map((show) => (
+                <ShowCard
+                  key={show.slug}
+                  show={show}
+                  href={`/podcast/show/${show.slug}`}
+                />
+              ))}
             </div>
           </div>
         )}
